@@ -26,7 +26,19 @@ namespace MTOGO_API_Service.Data
             _orderColl = _database.GetCollection<Order>("Orders");
         }
 
-        //Method for adding a new restaurant
+        //Method for adding a new Customer
+        public void addCustomer(Customer customer)
+        {
+            _customerColl.InsertOne(customer);
+        }
+
+        //Method for adding a new order
+        public void addOrder(Order order)
+        {
+            _orderColl.InsertOne(order);
+        }
+
+        //Method for adding a new menu item
         public void addMenuItem(MenuItem menuItem)
         {
             _menuItemColl.InsertOne(menuItem);
