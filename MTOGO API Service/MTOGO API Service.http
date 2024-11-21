@@ -1,0 +1,6 @@
+@MTOGO_API_Service_HostAddress = http://localhost:5140
+
+GET {{MTOGO_API_Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

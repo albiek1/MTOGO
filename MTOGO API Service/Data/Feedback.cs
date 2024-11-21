@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 
-namespace MTOGO.ApiService.Data
+namespace MTOGO_API_Service.Data
 {
     public class Feedback
     {

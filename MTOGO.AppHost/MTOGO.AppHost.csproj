@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MTOGO.ApiService\MTOGO.ApiService.csproj" />
     <ProjectReference Include="..\MTOGO.Web\MTOGO.Web.csproj" />
   </ItemGroup>
 

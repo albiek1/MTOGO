@@ -1,10 +1,10 @@
 ﻿using MongoDB.Bson;
 
-namespace MTOGO.ApiService.Data
+namespace MTOGO_API_Service.Data
 {
     public class Courier
     {
-        public ObjectId ObjectId { get; set; }
+        public ObjectId CourierId { get; set; }
         public string Name { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
