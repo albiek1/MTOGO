@@ -15,8 +15,8 @@ namespace MTOGO_Api_Service.Controllers
         [HttpPost("courier/add")]
         public ActionResult<Courier> addNewCourier([FromBody] Courier courier)
         {
-            _dbManager.addCourier(courier);
-            Courier result = _dbManager.getCourierByEmail(courier.Email);
+            _dbManager.AddCourier(courier);
+            Courier result = _dbManager.GetCourierByEmail(courier.Email);
             return Ok(result);
         }
 
@@ -25,7 +25,7 @@ namespace MTOGO_Api_Service.Controllers
         {
             try
             {
-                Courier courier = _dbManager.getCourierByEmail(email);
+                Courier courier = _dbManager.GetCourierByEmail(email);
                 return Ok(courier);
             }
             catch (InvalidDataException e)
