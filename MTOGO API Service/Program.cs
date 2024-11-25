@@ -1,3 +1,5 @@
+using MTOGO_API_Service.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

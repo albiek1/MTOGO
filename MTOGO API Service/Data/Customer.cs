@@ -5,7 +5,7 @@ namespace MTOGO_API_Service.Data
     public class Customer
     {
         [BsonId]
-        public ObjectId Id { get; set; }
+        public ObjectId CustomerId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string PhoneNumber { get; set; }

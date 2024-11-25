@@ -39,9 +39,9 @@ namespace MTOGO_API_Service.Data
             _restaurantColl.InsertOne(restaurant);
         }
 
-        public Restaurant GetRestaurantByName(string name)
+        public List<Restaurant> GetRestaurantByName(string name)
         {
-            return _restaurantColl.Find(r => r.Name == name).FirstOrDefault();
+            return _restaurantColl.Find(r => r.Name.ToLower() == name.ToLower()).ToList();
         }
 
         public List<Restaurant> GetAllRestaurants()
@@ -85,12 +85,6 @@ namespace MTOGO_API_Service.Data
             return _orderColl.Find(order => order.RestaurantId == restaurantId).ToList();
         }
 
-        //Method for adding a new Customer
-        public void addCustomer(Customer customer)
-        {
-            _customerColl.InsertOne(customer);
-        }
-
         //Method for adding a new order
         public void AddOrder(Order order)
         {
@@ -98,6 +92,38 @@ namespace MTOGO_API_Service.Data
             order.OrderDate = DateTime.UtcNow;
             _orderColl.InsertOne(order);
         }
+
+        public void CreateOrder(Order order)
+        {
+            // Validering: Tjek at restauranten eksisterer
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == order.RestaurantId).FirstOrDefault();
+            if (restaurant == null)
+            {
+                throw new Exception("Restaurant not found");
+            }
+
+            // Validering: Tjek at kunden eksisterer
+            var customer = _customerColl.Find(c => c.CustomerId == order.CustomerId).FirstOrDefault();
+            if (customer == null)
+            {
+                throw new Exception("Customer not found");
+            }
+
+            // Tilføj metadata til ordren
+            order.OrderId = ObjectId.GenerateNewId();
+            order.OrderDate = DateTime.Now;
+            order.Status = "Pending";
+
+            // Indsæt ordren
+            _orderColl.InsertOne(order);
+        }
+
+        //Method for adding a new Customer
+        public void addCustomer(Customer customer)
+        {
+            _customerColl.InsertOne(customer);
+        }
+
 
         //Method for adding a Courier
         public void AddCourier(Courier courier)
