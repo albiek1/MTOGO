@@ -36,6 +36,7 @@ namespace MTOGO_API_Service.Data
             //Vi benytter nextId til at få et unikt ID på vores restaurants Ejer
             restaurant.OwnerId = nextId++;
             restaurant.RestaurantId = ObjectId.GenerateNewId(); // Generer ID
+            restaurant.Menu ??= null;
             _restaurantColl.InsertOne(restaurant);
         }
 
@@ -64,19 +65,40 @@ namespace MTOGO_API_Service.Data
             _restaurantColl.ReplaceOne(r => r.OwnerId == ownerId, restaurant);
         }
 
-        public void AddMenuItemToRestaurantMenu(int ownerId, MenuItem menuItem)
+        public void AddMenuItemToRestaurantMenu(string restaurantId, ObjectId menuId, MenuItem menuItem)
         {
-            var restaurant = _restaurantColl.Find(r => r.OwnerId == ownerId).FirstOrDefault();
-            if (restaurant == null || restaurant.Menu == null)
+            // Find restauranten baseret på restaurantId
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == ObjectId.Parse(restaurantId)).FirstOrDefault();
+
+            if (restaurant == null)
             {
-                throw new Exception("Restaurant or Menu not found");
+                throw new Exception($"Restaurant with ID {restaurantId} not found.");
             }
 
-            menuItem.MenuItemId = ObjectId.GenerateNewId(); // Generér ID til MenuItem
+            if (restaurant.Menu == null)
+            {
+                throw new Exception($"Menu not found for Restaurant ID {restaurantId}.");
+            }
+
+            if (restaurant.Menu.MenuId != menuId)
+            {
+                throw new Exception($"Menu with ID {menuId} not found in the specified Restaurant.");
+            }
+
+            if (restaurant.Menu.MenuItems == null)
+            {
+                // Initialiser liste, hvis den er null
+                restaurant.Menu.MenuItems = new List<MenuItem>();
+            }
+
+            // Generér ID for menu-item
+            menuItem.MenuItemId = ObjectId.GenerateNewId();
+
+            // Tilføj menu-item til menuens liste
             restaurant.Menu.MenuItems.Add(menuItem);
 
             // Opdater restauranten i databasen
-            _restaurantColl.ReplaceOne(r => r.OwnerId == ownerId, restaurant);
+            _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurant.RestaurantId, restaurant);
         }
 
         //Vi henter vores ordre per restaurant ud fra Restaurantens ID
@@ -88,35 +110,49 @@ namespace MTOGO_API_Service.Data
         //Method for adding a new order
         public void AddOrder(Order order)
         {
-            order.OrderId = ObjectId.GenerateNewId();
-            order.OrderDate = DateTime.UtcNow;
-            _orderColl.InsertOne(order);
+            var customerObjectId = order.CustomerId;
+            var restaurantObjectId = order.RestaurantId;
+
+            var dbOrder = new Order
+            {
+                OrderId = ObjectId.GenerateNewId(),
+                CustomerId = customerObjectId,
+                RestaurantId = restaurantObjectId,
+                Items = order.Items,
+                OrderDate = DateTime.UtcNow,
+                Status = order.Status,
+                OrderComment = order.OrderComment
+            };
+            //order.OrderId = ObjectId.GenerateNewId();
+            //order.OrderDate = DateTime.UtcNow;
+            
+            _orderColl.InsertOne(dbOrder);
         }
 
-        public void CreateOrder(Order order)
-        {
-            // Validering: Tjek at restauranten eksisterer
-            var restaurant = _restaurantColl.Find(r => r.RestaurantId == order.RestaurantId).FirstOrDefault();
-            if (restaurant == null)
-            {
-                throw new Exception("Restaurant not found");
-            }
+        //public void CreateOrder(Order order)
+        //{
+        //    // Validering: Tjek at restauranten eksisterer
+        //    var restaurant = _restaurantColl.Find(r => r.RestaurantId == order.RestaurantId).FirstOrDefault();
+        //    if (restaurant == null)
+        //    {
+        //        throw new Exception("Restaurant not found");
+        //    }
 
-            // Validering: Tjek at kunden eksisterer
-            var customer = _customerColl.Find(c => c.CustomerId == order.CustomerId).FirstOrDefault();
-            if (customer == null)
-            {
-                throw new Exception("Customer not found");
-            }
+        //    // Validering: Tjek at kunden eksisterer
+        //    var customer = _customerColl.Find(c => c.CustomerId == order.CustomerId).FirstOrDefault();
+        //    if (customer == null)
+        //    {
+        //        throw new Exception("Customer not found");
+        //    }
 
-            // Tilføj metadata til ordren
-            order.OrderId = ObjectId.GenerateNewId();
-            order.OrderDate = DateTime.Now;
-            order.Status = "Pending";
+        //    // Tilføj metadata til ordren
+        //    order.OrderId = ObjectId.GenerateNewId();
+        //    order.OrderDate = DateTime.Now;
+        //    order.Status = "Pending";
 
-            // Indsæt ordren
-            _orderColl.InsertOne(order);
-        }
+        //    // Indsæt ordren
+        //    _orderColl.InsertOne(order);
+        //}
 
         //Method for adding a new Customer
         public void addCustomer(Customer customer)

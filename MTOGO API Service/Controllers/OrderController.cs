@@ -33,7 +33,7 @@ namespace MTOGO_Api_Service.Controllers
                 order.CustomerId = customerObjectId;
 
                 // Fortsæt med oprettelsen af ordren
-                _dbManager.CreateOrder(order);
+                _dbManager.AddOrder(order);
                 return Ok("Order created successfully!");
             }
             catch (Exception ex)

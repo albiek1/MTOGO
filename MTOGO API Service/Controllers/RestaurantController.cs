@@ -26,12 +26,26 @@ namespace MTOGO_Api_Service.Controllers
         }
 
         [HttpPost("{restaurantId}/menu/menuitem/add")]
-        public ActionResult AddMenuItemToRestaurantMenu(string restaurantId, [FromBody] MenuItem menuItem)
+        public ActionResult AddMenuItemToRestaurantMenu(string restaurantId, string menuId, [FromBody] MenuItem menuItem)
         {
             try
             {
-                _dbManager.AddMenuItemToRestaurantMenu(int.Parse(restaurantId), menuItem);
-                return Ok("MenuItem added to restaurant's menu successfully.");
+                if (string.IsNullOrEmpty(menuId))
+                {
+                    return BadRequest("menuId cannot be null or empty.");
+                }
+
+                // Konverter menuId fra string til ObjectId
+                var menuObjectId = ObjectId.Parse(menuId);
+
+                // Kald DBManager-metoden
+                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuObjectId, menuItem);
+
+                return Ok("Menu item added to restaurant's menu successfully.");
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid menuId format.");
             }
             catch (Exception ex)
             {

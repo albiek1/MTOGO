@@ -1,9 +1,11 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MTOGO_API_Service.Data
 {
     public class Courier
     {
+        [BsonId]
         public ObjectId CourierId { get; set; }
         public string Name { get; set; }
         public string PhoneNumber { get; set; }
