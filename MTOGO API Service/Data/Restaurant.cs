@@ -1,9 +1,10 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace MTOGO_API_Service.Data
 {
-    public class Restaurant
+    public class Restaurant : IValidatableObject
     {
         [BsonId]
         public ObjectId RestaurantId { get; set; }
@@ -13,5 +14,12 @@ namespace MTOGO_API_Service.Data
         public string ContactInfo { get; set; }
         public double RestaurantRating { get; set; }
         public Menu Menu { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            List<ValidationResult>? validationResults = null;
+
+            return validationResults ?? Enumerable.Empty<ValidationResult>();
+        }
     }
 }

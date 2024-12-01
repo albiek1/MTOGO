@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Web", "MTOGO.Web\MTOG
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO.Tests", "MTOGO.Tests\MTOGO.Tests.csproj", "{2B61B4AB-7E4B-4CCD-B175-9A6C2D849CC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTOGO API Service", "MTOGO API Service\MTOGO API Service.csproj", "{EB9EC094-3669-4DBA-849E-766A44F3A688}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTOGO API Service", "MTOGO API Service\MTOGO API Service.csproj", "{EB9EC094-3669-4DBA-849E-766A44F3A688}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

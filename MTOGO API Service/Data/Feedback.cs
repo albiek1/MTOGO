@@ -6,6 +6,7 @@ namespace MTOGO_API_Service.Data
     {
         public ObjectId FeedbackId { get; set; }
         public ObjectId CustomerId { get; set; }
+        public ObjectId DeliveryId { get; set; }
         public double CourierRating { get; set; }
         public double RestautrantRating { get; set; }
         public string RatingComment { get; set; }

@@ -1,0 +1,16 @@
+﻿@page "/Restaurants"
+
+<PageTitle>Restaurants</PageTitle>
+
+<h3>Restaurants</h3>
+
+
+
+@code {
+    List<Restaurant> restaurants;
+    HttpClient httpClient = new() { BaseAddress = new Uri("https://localhost7025") };
+    protected override async Task OnInitializedAsync()
+    {
+        HttpResponseMessage response = await httpClient.GetAsync("$");
+    }
+}

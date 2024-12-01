@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MTOGO API Service\MTOGO API Service.csproj" />
     <ProjectReference Include="..\MTOGO.Web\MTOGO.Web.csproj" />
   </ItemGroup>
 
