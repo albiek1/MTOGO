@@ -11,67 +11,7 @@ namespace MTOGO_Api_Service.Controllers
     {
         DBManager _dbManager = new DBManager();
 
-        [HttpPost("{restaurantId}/menu/add")]
-        public ActionResult AddMenuToRestaurant(string restaurantId, [FromBody] Menu menu)
-        {
-            try
-            {
-                _dbManager.AddMenuToRestaurant(int.Parse(restaurantId), menu);
-                return Ok("Menu added to restaurant successfully.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error: {ex.Message}");
-            }
-        }
-
-        [HttpPost("{restaurantId}/menu/menuitem/add")]
-        public ActionResult AddMenuItemToRestaurantMenu(string restaurantId, string menuId, [FromBody] MenuItem menuItem)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(menuId))
-                {
-                    return BadRequest("menuId cannot be null or empty.");
-                }
-
-                // Konverter menuId fra string til ObjectId
-                var menuObjectId = ObjectId.Parse(menuId);
-
-                // Kald DBManager-metoden
-                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuObjectId, menuItem);
-
-                return Ok("Menu item added to restaurant's menu successfully.");
-            }
-            catch (FormatException)
-            {
-                return BadRequest("Invalid menuId format.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error: {ex.Message}");
-            }
-        }
-
-        [HttpGet("search/by-name")]
-        public ActionResult<Restaurant> GetRestaurantByName([FromQuery] string name)
-        {
-            try
-            {
-                var restaurant = _dbManager.GetRestaurantByName(name);
-                if (restaurant == null)
-                {
-                    return NotFound("Restaurant not found");
-                }
-                return Ok(restaurant);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error: {ex.Message}");
-            }
-        }
-
-        [HttpPost("restaurant/add")]
+        [HttpPost("add")]
         public ActionResult<Restaurant> AddRestaurant([FromBody] Restaurant restaurant)
         {
             try
@@ -85,29 +25,18 @@ namespace MTOGO_Api_Service.Controllers
             }
         }
 
-        //[HttpGet("restaurant/{restaurantId}")]
-        //public ActionResult<Restaurant> GetRestaurantById(string ownerId)
-        //{
-        //    try
-        //    {
-        //        var restaurant = _dbManager.GetRestaurantById(int.Parse(ownerId));
-        //        if (restaurant == null)
-        //            return NotFound("Restaurant not found");
-
-        //        return Ok(restaurant);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest($"Error: {ex.Message}");
-        //    }
-        //}
-
-        [HttpGet("allrestaurants")]
-        public ActionResult<List<Restaurant>> GetAllRestaurants()
+        [HttpGet("{restaurantId}")]
+        public ActionResult<Restaurant> GetRestaurantById(string restaurantId)
         {
             try
             {
-                return Ok(_dbManager.GetAllRestaurants());
+                var id = ObjectId.Parse(restaurantId);
+                var restaurant = _dbManager.GetRestaurantById(id);
+                if (restaurant == null)
+                {
+                    return NotFound("Restaurant not found.");
+                }
+                return Ok(restaurant);
             }
             catch (Exception ex)
             {
@@ -115,5 +44,52 @@ namespace MTOGO_Api_Service.Controllers
             }
         }
 
+        [HttpPost("{restaurantId}/menu/add")]
+        public ActionResult AddMenuToRestaurant(string restaurantId, [FromBody] Menu menu)
+        {
+            try
+            {
+                var id = ObjectId.Parse(restaurantId);
+                _dbManager.AddMenuToRestaurant(id, menu);
+                return Ok("Menu added to restaurant successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{restaurantId}")]
+        public IActionResult DeleteRestaurant(string restaurantId)
+        {
+            try
+            {
+                var id = ObjectId.Parse(restaurantId);
+                _dbManager.DeleteRestaurant(id);
+                return Ok("Restaurant deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("{restaurantId}/update-info")]
+        public IActionResult UpdateRestaurantInfo(string restaurantId, [FromBody] Restaurant updatedRestaurant)
+        {
+            try
+            {
+                var id = ObjectId.Parse(restaurantId);
+
+                // Kald DBManager-metoden for at opdatere specifikke felter
+                _dbManager.UpdateRestaurant(id, updatedRestaurant);
+
+                return Ok("Restaurant information, including ContactInfo, updated successfully without modifying the menu.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
     }
 }

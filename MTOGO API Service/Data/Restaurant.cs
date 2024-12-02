@@ -7,7 +7,7 @@ namespace MTOGO_API_Service.Data
     {
         [BsonId]
         public ObjectId RestaurantId { get; set; }
-        public int OwnerId { get; set; }
+        //public int OwnerId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
         public string ContactInfo { get; set; }

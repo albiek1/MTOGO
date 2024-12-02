@@ -11,72 +11,65 @@ namespace MTOGO_Api_Service.Controllers
     {
         DBManager _dbManager = new DBManager();
 
-        [HttpPost("create")]
-        public ActionResult CreateOrder([FromBody] Order order)
+        [HttpPost("add")]
+        public IActionResult AddOrder([FromBody] Order order)
         {
             try
             {
-                // Valider og konverter restaurantId fra string til ObjectId
-                if (!ObjectId.TryParse(order.RestaurantId.ToString(), out ObjectId restaurantObjectId))
-                {
-                    return BadRequest("Invalid RestaurantId format.");
-                }
-
-                // Valider og konverter customerId fra string til ObjectId
-                if (!ObjectId.TryParse(order.CustomerId.ToString(), out ObjectId customerObjectId))
-                {
-                    return BadRequest("Invalid CustomerId format.");
-                }
-
-                // Opdatér order med konverterede ObjectIds
-                order.RestaurantId = restaurantObjectId;
-                order.CustomerId = customerObjectId;
-
-                // Fortsæt med oprettelsen af ordren
                 _dbManager.AddOrder(order);
-                return Ok("Order created successfully!");
+                return Ok("Order added successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest($"Error: {ex.Message}");
             }
         }
 
-        //[HttpPost("add")]
-        //public ActionResult AddOrder([FromBody] Order order)
-        //{
-        //    try
-        //    {
-        //        _dbManager.AddOrder(order);
-        //        return Ok("Order added successfully.");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest($"Error: {ex.Message}");
-        //    }
-        //}
-
-        //[HttpPost("create")]
-        //public ActionResult CreateOrder([FromBody] CreateOrderRequest request)
-        //{
-        //    try
-        //    {
-        //        _dbManager.AddOrder(request.CustomerId, request.RestaurantId, request.OrderItems);
-        //        return Ok("Order created successfully!");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
-
-        [HttpGet("restaurant/{restaurantId}")]
-        public ActionResult<List<Order>> GetOrdersByRestaurant(string restaurantId)
+        [HttpGet("{orderId}")]
+        public ActionResult<Order> GetOrderById(string orderId)
         {
             try
             {
-                var orders = _dbManager.GetOrdersByRestaurant(ObjectId.Parse(restaurantId));
-                return Ok(orders);
+                var id = ObjectId.Parse(orderId);
+                var order = _dbManager.GetOrderById(id);
+                if (order == null)
+                {
+                    return NotFound("Order not found.");
+                }
+                return Ok(order);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{orderId}")]
+        public IActionResult DeleteOrder(string orderId)
+        {
+            try
+            {
+                var id = ObjectId.Parse(orderId);
+                _dbManager.DeleteOrder(id);
+                return Ok("Order deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("{orderId}/update-info")]
+        public IActionResult UpdateOrderInfo(string orderId, [FromBody] Order updatedOrder)
+        {
+            try
+            {
+                var id = ObjectId.Parse(orderId);
+
+                // Kald DBManager-metoden for at opdatere ordren
+                _dbManager.UpdateOrderInfo(id, updatedOrder);
+
+                return Ok("Order information updated successfully.");
             }
             catch (Exception ex)
             {
