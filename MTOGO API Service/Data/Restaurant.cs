@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MTOGO_API_Service.Data
 {
-    public class Restaurant : IValidatableObject
+    public class Restaurant// : IValidatableObject
     {
         [BsonId]
         public ObjectId RestaurantId { get; set; }
@@ -15,11 +15,11 @@ namespace MTOGO_API_Service.Data
         public double RestaurantRating { get; set; }
         public Menu Menu { get; set; }
 
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        /*public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             List<ValidationResult>? validationResults = null;
 
             return validationResults ?? Enumerable.Empty<ValidationResult>();
-        }
+        }*/
     }
 }

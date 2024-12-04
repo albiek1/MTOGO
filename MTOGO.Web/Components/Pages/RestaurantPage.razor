@@ -1,16 +1,68 @@
-﻿@page "/Restaurants"
+﻿@page "/restaurants"
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@rendermode InteractiveServer
 
 <PageTitle>Restaurants</PageTitle>
 
 <h3>Restaurants</h3>
+<p>Restaurant Count: @arraycount</p>
+@if(arraycount > 0)
+{
+    for(int r = 0; r < arraycount; r++)
+    {
+        <p>restaurant number: @r</p>
+        <p>Restuarant name: @jsonstring[r].GetProperty("name").ToString()</p>
+    }
+}
 
-
+@if (!string.IsNullOrEmpty(errormsg))
+{
+    <p>@errormsg</p>
+}
 
 @code {
     List<Restaurant> restaurants;
-    HttpClient httpClient = new() { BaseAddress = new Uri("https://localhost7025") };
+    HttpClient httpClient = new() { BaseAddress = new Uri("https://localhost:7030") };
+    private List<restaurant> restaurantList = new();
+    JsonElement jsonstring;
+    private string errormsg;
+    string temp;
+    int arraycount;
     protected override async Task OnInitializedAsync()
     {
-        HttpResponseMessage response = await httpClient.GetAsync("$");
+        HttpResponseMessage response = await httpClient.GetAsync($"api/Restaurant/allrestaurants");
+        if (response.IsSuccessStatusCode)
+        {
+            string json = await response.Content.ReadAsStringAsync();
+            jsonstring = JsonSerializer.Deserialize<JsonElement>(json);
+            temp = jsonstring[0].ToString();
+            arraycount = jsonstring.GetArrayLength();
+            for(int i = 0; i < jsonstring.GetArrayLength(); i++)
+            {
+
+                /*string TName = jsonstring[i].GetProperty("name").ToString();
+                int TOwnerId = jsonstring[i].GetProperty("ownerId").GetInt32();
+                string TAddress = jsonstring[i].GetProperty("address").ToString();
+                string TContact = jsonstring[i].GetProperty("contactInfo").ToString();
+                double TRating = jsonstring[i].GetProperty("restaurantRating").GetDouble();
+                restaurantList.Add(new restaurant(TName, TOwnerId, TAddress, TContact, TRating));*/
+            }
+            errormsg = null;
+        }
+        else
+        {
+            errormsg = "$could not find restaurants" + response.ToString();
+        }
+        StateHasChanged();
+    }
+
+    public record restaurant(string Name, int OwnerId, string Address, string ContactInfo, double Rating)
+    {
+        public string Name { get; set; }
+        public int OwnerId { get; set; }
+        public string Address { get; set; }
+        public string ContactInfo { get; set; }
+        public double RestaurantRating { get; set; }
     }
 }
