@@ -13,6 +13,7 @@
     {
         <p>restaurant number: @r</p>
         <p>Restuarant name: @jsonstring[r].GetProperty("name").ToString()</p>
+        //<p>Restaurant Location: @jsonstring[r].GetProperty("location").ToString()</p>
     }
 }
 
@@ -22,7 +23,6 @@
 }
 
 @code {
-    List<Restaurant> restaurants;
     HttpClient httpClient = new() { BaseAddress = new Uri("https://localhost:7030") };
     JsonElement jsonstring;
     private string errormsg;
