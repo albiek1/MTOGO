@@ -141,6 +141,30 @@ namespace MTOGO_API_Service.Data
             _courierColl.InsertOne(courier);
         }
 
+        public void AddDeliveriesToCourier(ObjectId courierId, List<ObjectId> deliveryIds)
+        {
+            var courier = _courierColl.Find(c => c.CourierId == courierId).FirstOrDefault();
+            if(courier == null)
+            {
+                throw new Exception($"Courier with ID {courierId} not found.");
+            }
+
+            if (courier.AssignedDeliveries == null)
+            {
+                courier.AssignedDeliveries = new List<ObjectId>();
+            }
+
+            foreach (var deliveryId in deliveryIds)
+            {
+                if (!courier.AssignedDeliveries.Contains(deliveryId))
+                {
+                    courier.AssignedDeliveries.Add(deliveryId);
+                }
+            }
+
+            _courierColl.ReplaceOne(c => c.CourierId == courierId, courier);
+        }
+
         //GET Metoder
         public List<Customer> GetAllCustomers()
         {
