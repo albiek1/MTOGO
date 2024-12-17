@@ -1,19 +1,29 @@
 ﻿@page "/restaurants"
 @using System.Text.Json
 @using System.Text.Json.Nodes
+@using MongoDB.Bson
 @rendermode InteractiveServer
 
 <PageTitle>Restaurants</PageTitle>
 
 <h3>Restaurants</h3>
-<p>Restaurant Count: @arraycount</p>
 @if(arraycount > 0)
 {
-    for(int r = 0; r < arraycount; r++)
+    foreach(Restaurant res in RestaurantList)
     {
-        <p>restaurant number: @r</p>
-        <p>Restuarant name: @jsonstring[r].GetProperty("name").ToString()</p>
-        //<p>Restaurant Location: @jsonstring[r].GetProperty("location").ToString()</p>
+        <div class="container">
+            <div class="grid">
+                <div class="grid-item" data-id="@res.restaurantName">
+                    <div class="grid-item-text">
+                        <h4 class="pointer-events-none">@res.restaurantName</h4>
+                        <p class="item-description pointer-events-none">@res.address</p>
+                        <p class="item-description pointer-events-none">@res.contactInfo</p>
+                        <p class="item-description pointer-events-none">@res.rating</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     }
 }
 
@@ -27,6 +37,7 @@
     JsonElement jsonstring;
     private string errormsg;
     string temp;
+    List<Restaurant> RestaurantList = new();
     int arraycount;
     protected override async Task OnInitializedAsync()
     {
@@ -34,9 +45,19 @@
         if (response.IsSuccessStatusCode)
         {
             string json = await response.Content.ReadAsStringAsync();
+            temp = json;
             jsonstring = JsonSerializer.Deserialize<JsonElement>(json);
             temp = jsonstring[0].ToString();
             arraycount = jsonstring.GetArrayLength();
+            for(int i = 0; i < arraycount; i++)
+            {
+                string name = jsonstring[i].GetProperty("name").GetString();
+                string address = jsonstring[i].GetProperty("address").GetString();
+                string contactInfo = jsonstring[i].GetProperty("contactInfo").GetString();
+                double rating = jsonstring[i].GetProperty("restaurantRating").GetDouble();
+                Restaurant restaurant = new Restaurant(name, address, contactInfo, rating);
+                RestaurantList.Add(restaurant);
+            }
             errormsg = null;
         }
         else
@@ -44,5 +65,13 @@
             errormsg = "$could not find restaurants" + response.ToString();
         }
         StateHasChanged();
+    }
+
+    public class Restaurant(string name, string address, string contactinfo, double rating)
+    {
+        public string restaurantName = name;
+        public string address = address;
+        public string contactInfo = contactinfo;
+        public double rating = rating;
     }
 }
