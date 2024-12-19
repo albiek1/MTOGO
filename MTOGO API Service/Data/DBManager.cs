@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Linq;
 
 namespace MTOGO_API_Service.Data
 {
@@ -91,35 +92,51 @@ namespace MTOGO_API_Service.Data
         //Method for adding a new order
         public void AddOrder(Order order)
         {
-            // Validering: Tjek at CustomerId og RestaurantId er gyldige ObjectId'er
+            // Valider CustomerId og MenuId
             if (!ObjectId.TryParse(order.CustomerId.ToString(), out var customerObjectId))
             {
                 throw new Exception("Invalid CustomerId format.");
             }
 
-            if (!ObjectId.TryParse(order.RestaurantId.ToString(), out var restaurantObjectId))
+            if (!ObjectId.TryParse(order.MenuId.ToString(), out var menuObjectId))
             {
-                throw new Exception("Invalid RestaurantId format.");
+                throw new Exception("Invalid MenuId format.");
             }
 
-            // Find relaterede objekter
+            // Find Customer
             var customer = _customerColl.Find(c => c.CustomerId == customerObjectId).FirstOrDefault();
             if (customer == null)
             {
                 throw new Exception($"Customer with ID {customerObjectId} not found.");
             }
 
-            var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantObjectId).FirstOrDefault();
-            if (restaurant == null)
+            // Find Menu og MenuItems
+            var restaurant = _restaurantColl.Find(r => r.Menu.MenuId == menuObjectId).FirstOrDefault();
+            if (restaurant == null || restaurant.Menu.MenuItems == null)
             {
-                throw new Exception($"Restaurant with ID {restaurantObjectId} not found.");
+                throw new Exception($"Menu with ID {menuObjectId} not found or has no items.");
+            }
+
+            // Berig Items med detaljerede oplysninger
+            var orderItems = new List<OrderItemDetail>();
+            foreach (var menuItem in restaurant.Menu.MenuItems)
+            {
+                orderItems.Add(new OrderItemDetail
+                {
+                    MenuItemId = menuItem.MenuItemId,
+                    Name = menuItem.MenuItemName,
+                    Price = menuItem.Price,
+                    Category = menuItem.Category
+                });
             }
 
             // Opret ny ordre
             order.OrderId = ObjectId.GenerateNewId();
+            order.Items = orderItems; // Gem de detaljerede oplysninger
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
 
+            // Indsæt ordren i databasen
             _orderColl.InsertOne(order);
         }
 
@@ -250,12 +267,11 @@ namespace MTOGO_API_Service.Data
         // Opdater en ordre
         public void UpdateOrderInfo(ObjectId orderId, Order updatedOrder)
         {
-            // Byg opdateringsdefinitionen til felter, der ikke inkluderer MenuItems
+            // Specify which fields should be updated in the Order
             var updateDefinition = Builders<Order>.Update
                 .Set(o => o.Status, updatedOrder.Status)
                 .Set(o => o.OrderComment, updatedOrder.OrderComment);
 
-            // Udfør opdateringen i databasen
             _orderColl.UpdateOne(
                 o => o.OrderId == orderId,
                 updateDefinition
@@ -265,7 +281,7 @@ namespace MTOGO_API_Service.Data
         // Opdater en kurér
         public void UpdateCourier(ObjectId courierId, Courier updatedCourier)
         {
-            // Byg opdateringsdefinitionen til felter, der ikke inkluderer AssignedDeliveries
+            // Specify which fields should be updated for the Courier
             var updateDefinition = Builders<Courier>.Update
                 .Set(c => c.Name, updatedCourier.Name)
                 .Set(c => c.Email, updatedCourier.Email)

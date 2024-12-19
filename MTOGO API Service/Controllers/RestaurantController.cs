@@ -91,5 +91,22 @@ namespace MTOGO_Api_Service.Controllers
                 return BadRequest($"Error: {ex.Message}");
             }
         }
+
+        [HttpPost("{restaurantId}/menu/{menuId}/menu-item")]
+        public IActionResult AddMenuItemToMenu(string restaurantId, string menuId, [FromBody] MenuItem menuItem)
+        {
+            try
+            {
+                // Kald metoden for at tilføje en menuitem til menuen
+                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, ObjectId.Parse(menuId), menuItem);
+
+                return Ok(new { message = "Menu item successfully added to the menu." });
+            }
+            catch (Exception ex)
+            {
+                // Returner en bad request med fejlbeskeden
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }
