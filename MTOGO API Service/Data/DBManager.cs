@@ -32,34 +32,59 @@ namespace MTOGO_API_Service.Data
         //ADD Metoder
         public void AddRestaurant(Restaurant restaurant)
         {
-            //Vi benytter nextId til at få et unikt ID på vores restaurants Ejer
-            restaurant.RestaurantId = ObjectId.GenerateNewId(); // Generer ID
-            restaurant.Menu ??= null;
+            if (restaurant == null)
+            {
+                throw new ArgumentNullException(nameof(restaurant), "Restaurant cannot be null.");
+            }
+
+            // Generer et unikt ID og konverter det til string
+            restaurant.RestaurantId = ObjectId.GenerateNewId().ToString();
             _restaurantColl.InsertOne(restaurant);
         }
 
-        public void AddMenuToRestaurant(ObjectId restaurantId, Menu menu)
+        public void AddMenuToRestaurant(string restaurantId, Menu menu)
         {
-            // Find restauranten ud fra RestaurantId
+            if (string.IsNullOrEmpty(restaurantId))
+            {
+                throw new ArgumentException("restaurantId cannot be null or empty", nameof(restaurantId));
+            }
+
+            if (menu == null)
+            {
+                throw new ArgumentNullException(nameof(menu), "Menu cannot be null");
+            }
+
             var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantId).FirstOrDefault();
             if (restaurant == null)
             {
-                throw new Exception("Restaurant not found");
+                throw new Exception($"Restaurant with ID {restaurantId} not found.");
             }
 
-            // Generér et unikt ID til menuen
-            menu.MenuId = ObjectId.GenerateNewId();
+            // Generer et unikt ID til menuen og konverter til string
+            menu.MenuId = ObjectId.GenerateNewId().ToString();
             restaurant.Menu = menu;
 
-            // Opdater restauranten i databasen
             _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurantId, restaurant);
         }
 
-        public void AddMenuItemToRestaurantMenu(string restaurantId, ObjectId menuId, MenuItem menuItem)
+        public void AddMenuItemToRestaurantMenu(string restaurantId, string menuId, MenuItem menuItem)
         {
-            // Find restauranten baseret på restaurantId
-            var restaurant = _restaurantColl.Find(r => r.RestaurantId == ObjectId.Parse(restaurantId)).FirstOrDefault();
+            if (string.IsNullOrEmpty(restaurantId))
+            {
+                throw new ArgumentException("restaurantId cannot be null or empty", nameof(restaurantId));
+            }
 
+            if (string.IsNullOrEmpty(menuId))
+            {
+                throw new ArgumentException("menuId cannot be null or empty", nameof(menuId));
+            }
+
+            if (menuItem == null)
+            {
+                throw new ArgumentNullException(nameof(menuItem), "MenuItem cannot be null.");
+            }
+
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantId).FirstOrDefault();
             if (restaurant == null)
             {
                 throw new Exception($"Restaurant with ID {restaurantId} not found.");
@@ -77,66 +102,77 @@ namespace MTOGO_API_Service.Data
 
             if (restaurant.Menu.MenuItems == null)
             {
-                // Initialiser liste, hvis den er null
                 restaurant.Menu.MenuItems = new List<MenuItem>();
             }
 
-            menuItem.MenuItemId = ObjectId.GenerateNewId();
+            // Generer et unikt ID til MenuItem og konverter til string
+            menuItem.MenuItemId = ObjectId.GenerateNewId().ToString();
 
             restaurant.Menu.MenuItems.Add(menuItem);
 
             // Opdater restauranten i databasen
-            _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurant.RestaurantId, restaurant);
+            _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurantId, restaurant);
         }
 
         //Method for adding a new order
         public void AddOrder(Order order)
         {
-            // Valider CustomerId og MenuId
-            if (!ObjectId.TryParse(order.CustomerId.ToString(), out var customerObjectId))
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
+            }
+
+            // Validering af CustomerId og MenuId
+            if (!ObjectId.TryParse(order.CustomerId, out var customerObjectId))
             {
                 throw new Exception("Invalid CustomerId format.");
             }
 
-            if (!ObjectId.TryParse(order.MenuId.ToString(), out var menuObjectId))
+            if (!ObjectId.TryParse(order.MenuId, out var menuObjectId))
             {
                 throw new Exception("Invalid MenuId format.");
             }
 
-            // Find Customer
-            var customer = _customerColl.Find(c => c.CustomerId == customerObjectId).FirstOrDefault();
-            if (customer == null)
+            // Find den tilknyttede restaurant baseret på MenuId
+            var restaurant = _restaurantColl.Find(r => r.Menu.MenuId == order.MenuId).FirstOrDefault();
+            if (restaurant == null)
             {
-                throw new Exception($"Customer with ID {customerObjectId} not found.");
+                throw new Exception($"Menu with ID {order.MenuId} not found in any restaurant.");
             }
 
-            // Find Menu og MenuItems
-            var restaurant = _restaurantColl.Find(r => r.Menu.MenuId == menuObjectId).FirstOrDefault();
-            if (restaurant == null || restaurant.Menu.MenuItems == null)
+            // Hent og verificer hvert MenuItem i order.Items
+            var validatedItems = new List<OrderItemDetail>();
+            foreach (var inputItem in order.Items)
             {
-                throw new Exception($"Menu with ID {menuObjectId} not found or has no items.");
-            }
+                if (!ObjectId.TryParse(inputItem.MenuItemId, out var menuItemObjectId))
+                {
+                    throw new Exception($"Invalid MenuItemId format: {inputItem.MenuItemId}");
+                }
 
-            // Berig Items med detaljerede oplysninger
-            var orderItems = new List<OrderItemDetail>();
-            foreach (var menuItem in restaurant.Menu.MenuItems)
-            {
-                orderItems.Add(new OrderItemDetail
+                var menuItem = restaurant.Menu.MenuItems
+                    .FirstOrDefault(mi => mi.MenuItemId == inputItem.MenuItemId);
+
+                if (menuItem == null)
+                {
+                    throw new Exception($"MenuItem with ID {inputItem.MenuItemId} not found in Menu {order.MenuId}.");
+                }
+
+                // Tilføj detaljer til validatedItems
+                validatedItems.Add(new OrderItemDetail
                 {
                     MenuItemId = menuItem.MenuItemId,
                     Name = menuItem.MenuItemName,
                     Price = menuItem.Price,
-                    Category = menuItem.Category
+                    Description = menuItem.Category // Eller en anden beskrivelse
                 });
             }
 
-            // Opret ny ordre
-            order.OrderId = ObjectId.GenerateNewId();
-            order.Items = orderItems; // Gem de detaljerede oplysninger
+            // Opret ordre med de validerede MenuItems
+            order.OrderId = ObjectId.GenerateNewId().ToString();
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
+            order.ValidatedMenuItems = validatedItems; // Gem validerede items i order
 
-            // Indsæt ordren i databasen
             _orderColl.InsertOne(order);
         }
 
@@ -201,8 +237,13 @@ namespace MTOGO_API_Service.Data
         }
 
         // Hent en restaurant baseret på ID
-        public Restaurant GetRestaurantById(ObjectId restaurantId)
+        public Restaurant GetRestaurantById(string restaurantId)
         {
+            if (string.IsNullOrEmpty(restaurantId))
+            {
+                throw new ArgumentException("restaurantId cannot be null or empty", nameof(restaurantId));
+            }
+
             return _restaurantColl.Find(r => r.RestaurantId == restaurantId).FirstOrDefault();
         }
 
@@ -213,7 +254,7 @@ namespace MTOGO_API_Service.Data
         }
 
         // Hent en ordre baseret på ID
-        public Order GetOrderById(ObjectId orderId)
+        public Order GetOrderById(string orderId)
         {
             return _orderColl.Find(o => o.OrderId == orderId).FirstOrDefault();
         }
@@ -249,8 +290,18 @@ namespace MTOGO_API_Service.Data
         }
 
         // Opdater en restaurant
-        public void UpdateRestaurant(ObjectId restaurantId, Restaurant updatedRestaurant)
+        public void UpdateRestaurant(string restaurantId, Restaurant updatedRestaurant)
         {
+            if (string.IsNullOrEmpty(restaurantId))
+            {
+                throw new ArgumentException("restaurantId cannot be null or empty", nameof(restaurantId));
+            }
+
+            if (updatedRestaurant == null)
+            {
+                throw new ArgumentNullException(nameof(updatedRestaurant), "UpdatedRestaurant cannot be null.");
+            }
+
             // Byg en opdateringsdefinition med flere felter
             var updateDefinition = Builders<Restaurant>.Update
                 .Set(r => r.Name, updatedRestaurant.Name)
@@ -265,7 +316,7 @@ namespace MTOGO_API_Service.Data
         }
 
         // Opdater en ordre
-        public void UpdateOrderInfo(ObjectId orderId, Order updatedOrder)
+        public void UpdateOrderInfo(string orderId, Order updatedOrder)
         {
             // Specify which fields should be updated in the Order
             var updateDefinition = Builders<Order>.Update
@@ -312,14 +363,14 @@ namespace MTOGO_API_Service.Data
         }
 
         // Slet en restaurant
-        public void DeleteRestaurant(ObjectId restaurantId)
+        public void DeleteRestaurant(string restaurantId)
         {
             var filter = Builders<Restaurant>.Filter.Eq(r => r.RestaurantId, restaurantId);
             _restaurantColl.DeleteOne(filter);
         }
 
         // Slet en ordre
-        public void DeleteOrder(ObjectId orderId)
+        public void DeleteOrder(string orderId)
         {
             var filter = Builders<Order>.Filter.Eq(o => o.OrderId, orderId);
             _orderColl.DeleteOne(filter);

@@ -28,9 +28,15 @@ namespace MTOGO_Api_Service.Controllers
         [HttpGet("{orderId}")]
         public ActionResult<Order> GetOrderById(string orderId)
         {
+            // Sørg for, at orderId kan parses til ObjectId
+            if (!ObjectId.TryParse(orderId, out var id))
+            {
+                return BadRequest("Invalid orderId format.");
+            }
+
             try
             {
-                var id = ObjectId.Parse(orderId);
+                // Antag, at _dbManager.GetOrderById tager en ObjectId
                 var order = _dbManager.GetOrderById(id);
                 if (order == null)
                 {

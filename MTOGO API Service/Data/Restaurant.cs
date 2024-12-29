@@ -6,11 +6,17 @@ namespace MTOGO_API_Service.Data
     public class Restaurant
     {
         [BsonId]
-        public ObjectId RestaurantId { get; set; }
-        public string Name { get; set; }
-        public string Address { get; set; }
-        public string ContactInfo { get; set; }
-        public double RestaurantRating { get; set; }
-        public Menu? Menu { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string RestaurantId { get; set; } // Unik ID for restauranten
+
+        public string Name { get; set; } // Navn på restauranten
+
+        public string Address { get; set; } // Adresse
+
+        public string ContactInfo { get; set; } // Kontaktinformation
+
+        public int RestaurantRating { get; set; } // Rating for restauranten
+
+        public Menu Menu { get; set; } // Restaurantens menu
     }
 }
