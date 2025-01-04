@@ -62,11 +62,32 @@ namespace MTOGO_Api_Service.Controllers
         [HttpDelete("{restaurantId}")]
         public IActionResult DeleteRestaurant(string restaurantId)
         {
+            //try
+            //{
+            //    // Valider orderId for at sikre, at det er et gyldigt ObjectId-format
+            //    if (!ObjectId.TryParse(orderId, out _))
+            //    {
+            //        return BadRequest("Invalid OrderId format.");
+            //    }
+
+            //    // Kald DbManager for at slette ordren
+            //    _dbManager.DeleteOrder(orderId);
+            //    return Ok("Order deleted successfully.");
+            //}
+            //catch (Exception ex)
+            //{
+            //    return BadRequest($"Error: {ex.Message}");
+            //}
             try
             {
-                var id = ObjectId.Parse(restaurantId);
-                _dbManager.DeleteRestaurant(id);
-                return Ok("Restaurant deleted successfully.");
+                if(!ObjectId.TryParse(restaurantId, out _))
+                {
+                    return BadRequest("Invalid OrderId format.");
+                }
+
+                _dbManager.DeleteRestaurant(restaurantId);
+                return Ok("Order deleted successfully.");
+
             }
             catch (Exception ex)
             {
