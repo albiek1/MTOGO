@@ -32,7 +32,7 @@ namespace MTOGO_API_Service.Data
         public void AddRestaurant(Restaurant restaurant)
         {
             //Vi benytter nextId til at få et unikt ID på vores restaurants Ejer
-            restaurant.RestaurantId = ObjectId.GenerateNewId().ToString(); // Generer ID
+            restaurant.RestaurantId = ObjectId.GenerateNewId(); // Generer ID
             restaurant.Menu ??= null;
             _restaurantColl.InsertOne(restaurant);
         }
@@ -40,7 +40,7 @@ namespace MTOGO_API_Service.Data
         public void AddMenuToRestaurant(ObjectId restaurantId, Menu menu)
         {
             // Find restauranten ud fra RestaurantId
-            var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantId.ToString()).FirstOrDefault();
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantId).FirstOrDefault();
             if (restaurant == null)
             {
                 throw new Exception("Restaurant not found");
@@ -51,38 +51,37 @@ namespace MTOGO_API_Service.Data
             restaurant.Menu = menu;
 
             // Opdater restauranten i databasen
-            _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurantId.ToString(), restaurant);
+            _restaurantColl.ReplaceOne(r => r.RestaurantId == restaurantId, restaurant);
         }
 
-        public void AddMenuItemToRestaurantMenu(string restaurantId, string menuId, MenuItem menuItem)
+        public void AddMenuItemToRestaurantMenu(string restaurantId, ObjectId menuId, MenuItem menuItem)
         {
-            // Konverter menuId fra string til ObjectId
-            var menuObjectId = ObjectId.Parse(menuId);
-
             // Find restauranten baseret på restaurantId
-            var restaurant = _restaurantColl.Find(r => r.RestaurantId == ObjectId.Parse(restaurantId).ToString()).FirstOrDefault();
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == ObjectId.Parse(restaurantId)).FirstOrDefault();
 
             if (restaurant == null)
             {
                 throw new Exception($"Restaurant with ID {restaurantId} not found.");
             }
 
-            // Tjek om menuen findes i restauranten
-            if (restaurant.Menu == null || restaurant.Menu.MenuId != menuObjectId)
+            if (restaurant.Menu == null)
             {
-                throw new Exception($"Menu with ID {menuId} not found for Restaurant ID {restaurantId}.");
+                throw new Exception($"Menu not found for Restaurant ID {restaurantId}.");
             }
 
-            // Initialiser MenuItems-listen, hvis den er null
+            if (restaurant.Menu.MenuId != menuId)
+            {
+                throw new Exception($"Menu with ID {menuId} not found in the specified Restaurant.");
+            }
+
             if (restaurant.Menu.MenuItems == null)
             {
+                // Initialiser liste, hvis den er null
                 restaurant.Menu.MenuItems = new List<MenuItem>();
             }
 
-            // Tildel et nyt ObjectId til MenuItem
-            menuItem.MenuItemId = ObjectId.GenerateNewId().ToString();
+            menuItem.MenuItemId = ObjectId.GenerateNewId();
 
-            // Tilføj menuitem til menuen
             restaurant.Menu.MenuItems.Add(menuItem);
 
             // Opdater restauranten i databasen
@@ -92,57 +91,34 @@ namespace MTOGO_API_Service.Data
         //Method for adding a new order
         public void AddOrder(Order order)
         {
-            if (order == null)
-            {
-                throw new ArgumentNullException(nameof(order), "Order cannot be null.");
-            }
-
-            // Valider CustomerId og RestaurantId som gyldige ObjectId'er
-            if (!ObjectId.TryParse(order.CustomerId, out _))
+            // Validering: Tjek at CustomerId og RestaurantId er gyldige ObjectId'er
+            if (!ObjectId.TryParse(order.CustomerId.ToString(), out var customerObjectId))
             {
                 throw new Exception("Invalid CustomerId format.");
             }
 
-            if (!ObjectId.TryParse(order.RestaurantId, out _))
+            if (!ObjectId.TryParse(order.RestaurantId.ToString(), out var restaurantObjectId))
             {
                 throw new Exception("Invalid RestaurantId format.");
             }
 
-            // Find restauranten baseret på RestaurantId
-            var restaurant = _restaurantColl
-                .Find(r => r.RestaurantId == order.RestaurantId)
-                .FirstOrDefault();
-
-            if (restaurant == null || restaurant.Menu == null)
+            // Find relaterede objekter
+            var customer = _customerColl.Find(c => c.CustomerId == customerObjectId).FirstOrDefault();
+            if (customer == null)
             {
-                throw new Exception($"Restaurant with ID {order.RestaurantId} or its Menu not found.");
+                throw new Exception($"Customer with ID {customerObjectId} not found.");
             }
 
-            // Valider og berig hvert item i order.Items
-            foreach (var inputItem in order.Items)
+            var restaurant = _restaurantColl.Find(r => r.RestaurantId == restaurantObjectId).FirstOrDefault();
+            if (restaurant == null)
             {
-                if (!ObjectId.TryParse(inputItem.MenuItemId, out _))
-                {
-                    throw new Exception($"Invalid MenuItemId format: {inputItem.MenuItemId}");
-                }
-
-                var menuItem = restaurant.Menu.MenuItems
-                    .FirstOrDefault(mi => mi.MenuItemId == inputItem.MenuItemId);
-
-                if (menuItem == null)
-                {
-                    throw new Exception($"MenuItem with ID {inputItem.MenuItemId} not found in Restaurant Menu.");
-                }
-
-                // Berig inputItem med detaljer fra menuItem
-                inputItem.Name = menuItem.MenuItemName;
-                inputItem.Price = menuItem.Price;
-                inputItem.Description = menuItem.Category;
+                throw new Exception($"Restaurant with ID {restaurantObjectId} not found.");
             }
 
-            // Tildel nyt OrderId og gem ordren
-            order.OrderId = ObjectId.GenerateNewId().ToString();
+            // Opret ny ordre
+            order.OrderId = ObjectId.GenerateNewId();
             order.OrderDate = DateTime.UtcNow;
+            order.Status = "Pending";
 
             _orderColl.InsertOne(order);
         }
@@ -168,7 +144,7 @@ namespace MTOGO_API_Service.Data
         public void AddDeliveriesToCourier(ObjectId courierId, List<ObjectId> deliveryIds)
         {
             var courier = _courierColl.Find(c => c.CourierId == courierId).FirstOrDefault();
-            if(courier == null)
+            if (courier == null)
             {
                 throw new Exception($"Courier with ID {courierId} not found.");
             }
@@ -210,7 +186,7 @@ namespace MTOGO_API_Service.Data
         // Hent en restaurant baseret på ID
         public Restaurant GetRestaurantById(ObjectId restaurantId)
         {
-            return _restaurantColl.Find(r => r.RestaurantId == restaurantId.ToString()).FirstOrDefault();
+            return _restaurantColl.Find(r => r.RestaurantId == restaurantId).FirstOrDefault();
         }
 
         // Hent alle ordrer
@@ -222,27 +198,28 @@ namespace MTOGO_API_Service.Data
         // Hent en ordre baseret på ID
         public Order GetOrderById(ObjectId orderId)
         {
-            return _orderColl.Find(o => o.OrderId == orderId.ToString()).FirstOrDefault();
+            return _orderColl.Find(o => o.OrderId == orderId).FirstOrDefault();
         }
 
         //Method for checking if Email of Courier is Unique
-        public  bool IsCourierUnique(Courier courier)
+        public bool IsCourierUnique(Courier courier)
         {
             bool isUnique = false;
             Courier result = _courierColl.Find<Courier>(ele => ele.Email == courier.Email).FirstOrDefault();
-            if (result == null) {
-            isUnique = true;
+            if (result == null)
+            {
+                isUnique = true;
             }
             return isUnique;
         }
 
         //Method for searching up a courier by their Email address
-        public Courier GetCourierByEmail(string email) 
+        public Courier GetCourierByEmail(string email)
         {
             Courier courier = _courierColl.Find<Courier>(ele => ele.Email == email).FirstOrDefault();
             if (courier == null)
             {
-            throw new InvalidDataException("No customer found with that email");
+                throw new InvalidDataException("No customer found with that email");
             }
             return courier;
         }
@@ -266,7 +243,7 @@ namespace MTOGO_API_Service.Data
 
             // Udfør opdateringen i databasen
             _restaurantColl.UpdateOne(
-                r => r.RestaurantId == restaurantId.ToString(),
+                r => r.RestaurantId == restaurantId,
                 updateDefinition
             );
         }
@@ -281,7 +258,7 @@ namespace MTOGO_API_Service.Data
 
             // Udfør opdateringen i databasen
             _orderColl.UpdateOne(
-                o => o.OrderId == orderId.ToString(),
+                o => o.OrderId == orderId,
                 updateDefinition
             );
         }
@@ -320,25 +297,15 @@ namespace MTOGO_API_Service.Data
         }
 
         // Slet en restaurant
-        public void DeleteRestaurant(string restaurantId)
+        public void DeleteRestaurant(ObjectId restaurantId)
         {
-            if (!ObjectId.TryParse(restaurantId, out _))
-            {
-                throw new Exception("Invalid RestaurantId format.");
-            }
-
             var filter = Builders<Restaurant>.Filter.Eq(r => r.RestaurantId, restaurantId);
             _restaurantColl.DeleteOne(filter);
         }
 
         // Slet en ordre
-        public void DeleteOrder(string orderId)
+        public void DeleteOrder(ObjectId orderId)
         {
-            if (!ObjectId.TryParse(orderId, out _))
-            {
-                throw new Exception("Invalid OrderId format.");
-            }
-
             var filter = Builders<Order>.Filter.Eq(o => o.OrderId, orderId);
             _orderColl.DeleteOne(filter);
         }

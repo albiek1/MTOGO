@@ -59,6 +59,33 @@ namespace MTOGO_Api_Service.Controllers
             }
         }
 
+        [HttpPost("{restaurantId}/menu/{menuId}/menuitem")]
+        public IActionResult AddMenuItemToMenu(string restaurantId, string menuId, [FromBody] MenuItem menuItem)
+        {
+            try
+            {
+                // Valider og konverter restaurantId og menuId til ObjectId
+                if (!ObjectId.TryParse(restaurantId, out var restaurantObjectId))
+                {
+                    return BadRequest("Invalid restaurant ID format.");
+                }
+
+                if (!ObjectId.TryParse(menuId, out var menuObjectId))
+                {
+                    return BadRequest("Invalid menu ID format.");
+                }
+
+                // Kald DBManager-metoden
+                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuObjectId, menuItem);
+
+                return Ok("Menu item added successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
         [HttpDelete("{restaurantId}")]
         public IActionResult DeleteRestaurant(string restaurantId)
         {
@@ -80,12 +107,9 @@ namespace MTOGO_Api_Service.Controllers
             //}
             try
             {
-                if(!ObjectId.TryParse(restaurantId, out _))
-                {
-                    return BadRequest("Invalid OrderId format.");
-                }
+                var id = ObjectId.Parse(restaurantId);
 
-                _dbManager.DeleteRestaurant(restaurantId);
+                _dbManager.DeleteRestaurant(id);
                 return Ok("Order deleted successfully.");
 
             }

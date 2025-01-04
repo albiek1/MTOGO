@@ -49,14 +49,8 @@ namespace MTOGO_Api_Service.Controllers
         {
             try
             {
-                // Valider orderId for at sikre, at det er et gyldigt ObjectId-format
-                if (!ObjectId.TryParse(orderId, out _))
-                {
-                    return BadRequest("Invalid OrderId format.");
-                }
-
-                // Kald DbManager for at slette ordren
-                _dbManager.DeleteOrder(orderId);
+                var id = ObjectId.Parse(orderId);
+                _dbManager.DeleteOrder(id);
                 return Ok("Order deleted successfully.");
             }
             catch (Exception ex)

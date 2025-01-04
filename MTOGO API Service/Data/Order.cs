@@ -6,7 +6,7 @@ public class Order
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string OrderId { get; set; }
+    public ObjectId OrderId { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)]
     public string CustomerId { get; set; }
@@ -14,21 +14,18 @@ public class Order
     [BsonRepresentation(BsonType.ObjectId)]
     public string RestaurantId { get; set; }
 
-    public List<OrderItemDetail> Items { get; set; } = new List<OrderItemDetail>();
-
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
-
-    public string Status { get; set; } = "Pending";
-
+    public List<MenuItem>? Items { get; set; }
+    public DateTime OrderDate { get; set; }
+    public string Status { get; set; }
     public string OrderComment { get; set; }
 }
 
-public class OrderItemDetail
-{
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string MenuItemId { get; set; }
+//public class OrderItemDetail
+//{
+//    [BsonRepresentation(BsonType.ObjectId)]
+//    public string MenuItemId { get; set; }
 
-    public string Name { get; set; }
-    public double Price { get; set; }
-    public string Description { get; set; }
-}
+//    public string Name { get; set; }
+//    public double Price { get; set; }
+//    public string Description { get; set; }
+//}
