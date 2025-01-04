@@ -115,13 +115,52 @@ namespace MTOGO_API_Service.Data
                 throw new Exception($"Restaurant with ID {restaurantObjectId} not found.");
             }
 
-            // Opret ny ordre
+            // Opret ny ordre uden menuitems
             order.OrderId = ObjectId.GenerateNewId();
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
+            order.Items = new List<MenuItem>(); // Intet menuItem endnu
 
+            // Indsæt ordren i databasen
             _orderColl.InsertOne(order);
         }
+
+        public void AddMenuItemsToOrder(ObjectId orderId, List<MenuItem> menuItems)
+{
+    // Find ordren i databasen
+    var order = _orderColl.Find(o => o.OrderId == orderId).FirstOrDefault();
+    if (order == null)
+    {
+        throw new Exception("Order not found.");
+    }
+
+    // Validér og tilføj de nye menuItems til ordren
+    foreach (var menuItem in menuItems)
+    {
+        if (menuItem.MenuItemId == ObjectId.Empty)
+        {
+            throw new Exception($"Invalid MenuItemId for item {menuItem.MenuItemName}");
+        }
+
+        // Kontroller om menu-item allerede findes i ordren
+        if (order.Items.Any(i => i.MenuItemId == menuItem.MenuItemId))
+        {
+            throw new Exception($"MenuItem with ID {menuItem.MenuItemId} is already in the order.");
+        }
+
+        // Tilføj menu-item til ordre
+        order.Items.Add(menuItem);
+    }
+
+    // Opdater ordren i databasen
+    var updateResult = _orderColl.ReplaceOne(o => o.OrderId == orderId, order);
+
+    // Kontrollér, om opdateringen lykkedes
+    if (updateResult.ModifiedCount == 0)
+    {
+        throw new Exception("Failed to update the order. Please try again.");
+    }
+}
 
         //Method for adding a new Customer
         public void AddCustomer(Customer customer)

@@ -60,23 +60,20 @@ namespace MTOGO_Api_Service.Controllers
         }
 
         [HttpPost("{restaurantId}/menu/{menuId}/menuitem")]
-        public IActionResult AddMenuItemToMenu(string restaurantId, string menuId, [FromBody] MenuItem menuItem)
+        public IActionResult AddMenuItemToMenu(string restaurantId, ObjectId menuId, [FromBody] MenuItem menuItem)
         {
             try
             {
-                // Valider og konverter restaurantId og menuId til ObjectId
+                // Valider restaurantId format
                 if (!ObjectId.TryParse(restaurantId, out var restaurantObjectId))
                 {
                     return BadRequest("Invalid restaurant ID format.");
                 }
 
-                if (!ObjectId.TryParse(menuId, out var menuObjectId))
-                {
-                    return BadRequest("Invalid menu ID format.");
-                }
+                // Ingen grund til at validere menuId som ObjectId, da det bruges som string i DBManager
 
                 // Kald DBManager-metoden
-                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuObjectId, menuItem);
+                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuId, menuItem);
 
                 return Ok("Menu item added successfully.");
             }
