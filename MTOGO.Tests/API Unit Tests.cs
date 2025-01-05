@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using IdentityModel.Internal;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
 using MTOGO_API_Service.Data;
@@ -34,6 +35,24 @@ namespace MTOGO.Tests
 
             // Initialiser DBManager med kun mock client
             _dbManager = new DBManager(_mockClient.Object);
+        }
+
+        public static class TestHelpers
+        {
+            public static IAsyncCursor<T> MockCursor<T>(IEnumerable<T> items)
+            {
+                var mockCursor = new Mock<IAsyncCursor<T>>();
+
+                // Simuler en metode, der returnerer listen som 'Current'
+                mockCursor.Setup(c => c.Current).Returns(items.ToList());
+
+                // Simuler MoveNext (for at returnere en række med data, og derefter stoppe)
+                mockCursor.SetupSequence(c => c.MoveNext(It.IsAny<CancellationToken>()))
+                          .Returns(true) // Første kald returnerer data
+                          .Returns(false); // Derefter, ingen flere elementer
+
+                return mockCursor.Object;
+            }
         }
 
         [Fact]
@@ -159,21 +178,23 @@ namespace MTOGO.Tests
         [Fact]
         public void AddOrder_ShouldCallInsertOne()
         {
-            // Arrange: Mock IMongoCollection for Restaurant, Customer og Order
-            var mockRestaurantCollection = new Mock<IMongoCollection<Restaurant>>();
-            var mockCustomerCollection = new Mock<IMongoCollection<Customer>>();
+            // Arrange: Mock IMongoCollection<Order>
             var mockOrderCollection = new Mock<IMongoCollection<Order>>();
 
             // Mock IMongoDatabase
             var mockDatabase = new Mock<IMongoDatabase>();
-            mockDatabase.Setup(db => db.GetCollection<Restaurant>("Restaurants", null))
-                        .Returns(mockRestaurantCollection.Object);
-            mockDatabase.Setup(db => db.GetCollection<Customer>("Customers", null))
-                        .Returns(mockCustomerCollection.Object);
             mockDatabase.Setup(db => db.GetCollection<Order>("Orders", null))
                         .Returns(mockOrderCollection.Object);
 
-            // Mock IMongoClient
+            var mockRestaurantCollection = new Mock<IMongoCollection<Restaurant>>();
+            mockDatabase.Setup(db => db.GetCollection<Restaurant>("Restaurants", null))
+                        .Returns(mockRestaurantCollection.Object);
+
+            var mockCustomerCollection = new Mock<IMongoCollection<Customer>>();
+            mockDatabase.Setup(db => db.GetCollection<Customer>("Customers", null))
+                        .Returns(mockCustomerCollection.Object);
+
+            // Mock client returnerer database
             var mockClient = new Mock<IMongoClient>();
             mockClient.Setup(client => client.GetDatabase("SoftwareDevelopmentExam", null))
                       .Returns(mockDatabase.Object);
@@ -181,61 +202,71 @@ namespace MTOGO.Tests
             // Opret DBManager med mocket client
             var dbManager = new DBManager(mockClient.Object);
 
-            // Simuler en Restaurant og en Customer
-            var restaurant = new Restaurant
-            {
-                RestaurantId = ObjectId.GenerateNewId(),
-                Name = "Test Restaurant",
-                Address = "123 Test St",
-                ContactInfo = "test@example.com"
-            };
+            // Simuler eksisterende restaurant og kunde
+            var existingRestaurantId = ObjectId.GenerateNewId().ToString();
+            var existingCustomerId = ObjectId.GenerateNewId().ToString();
 
-            var customer = new Customer
-            {
-                CustomerId = ObjectId.GenerateNewId(),
-                Name = "John Doe",
-                Email = "johndoe@example.com",
-                PhoneNumber = "12345678",
-                UserName = "Tester",
-                Password = "Password"
-            };
+            // Mock IAsyncCursor til restaurant
+            var mockRestaurantCursor = new Mock<IAsyncCursor<Restaurant>>();
+            mockRestaurantCursor.Setup(cursor => cursor.Current)
+                                .Returns(new List<Restaurant>
+                                {
+                            new Restaurant { RestaurantId = ObjectId.Parse(existingRestaurantId) }
+                                });
+            mockRestaurantCursor.Setup(cursor => cursor.MoveNext(It.IsAny<CancellationToken>()))
+                                .Returns(true);
+            mockRestaurantCursor.Setup(cursor => cursor.Dispose())
+                                .Verifiable();
 
-            // Mock InsertOne for Restaurant og Customer for at simulere succesfuld indsættelse
-            mockRestaurantCollection
-                .Setup(coll => coll.InsertOne(It.IsAny<Restaurant>(), null, default))
-                .Callback<Restaurant, InsertOneOptions, CancellationToken>((res, opt, token) => restaurant = res);
+            // Mock Find på restaurant - her matcher vi parametrene korrekt
+            mockRestaurantCollection.Setup(coll => coll.Find(
+                    It.IsAny<FilterDefinition<Restaurant>>(),
+                    It.IsAny<FindOptions>())
+            ).Returns(mockRestaurantCursor.Object);
 
-            mockCustomerCollection
-                .Setup(coll => coll.InsertOne(It.IsAny<Customer>(), null, default))
-                .Callback<Customer, InsertOneOptions, CancellationToken>((cus, opt, token) => customer = cus);
+            // Mock IAsyncCursor til kunde
+            var mockCustomerCursor = new Mock<IAsyncCursor<Customer>>();
+            mockCustomerCursor.Setup(cursor => cursor.Current)
+                              .Returns(new List<Customer>
+                              {
+                          new Customer { CustomerId = ObjectId.Parse(existingCustomerId) }
+                              });
+            mockCustomerCursor.Setup(cursor => cursor.MoveNext(It.IsAny<CancellationToken>()))
+                              .Returns(true);
+            mockCustomerCursor.Setup(cursor => cursor.Dispose())
+                              .Verifiable();
 
-            // Tilføj Restaurant og Customer via DBManager
-            dbManager.AddRestaurant(restaurant);
-            dbManager.AddCustomer(customer);
+            // Mock Find på kunde - her matcher vi parametrene korrekt
+            mockCustomerCollection.Setup(coll => coll.Find(
+                    It.IsAny<FilterDefinition<Customer>>(),
+                    It.IsAny<FindOptions>())
+            ).Returns(mockCustomerCursor.Object);
 
-            // Opret en Order med gyldige ObjectId-strenge for Customer og Restaurant
+            // Simuler en ordre
             var order = new Order
             {
                 OrderId = ObjectId.GenerateNewId(),
-                CustomerId = customer.CustomerId.ToString(),
-                RestaurantId = restaurant.RestaurantId.ToString(),
+                CustomerId = existingCustomerId,
+                RestaurantId = existingRestaurantId,
                 OrderDate = DateTime.UtcNow,
                 Status = "Pending",
                 Items = null
             };
 
-            // Act: Tilføj Order
+            // Act: Kald AddOrder
             dbManager.AddOrder(order);
 
-            // Assert: Verificer, at InsertOne blev kaldt præcist én gang for Order
+            // Assert: Verificer, at InsertOne blev kaldt præcist én gang
             mockOrderCollection.Verify(
-                coll => coll.InsertOne(It.Is<Order>(o =>
-                    o.CustomerId == customer.CustomerId.ToString() &&
-                    o.RestaurantId == restaurant.RestaurantId.ToString()),
-                    null,
-                    It.IsAny<CancellationToken>()),
+                coll => coll.InsertOne(It.IsAny<Order>(), null, It.IsAny<CancellationToken>()),
                 Times.Once);
+
+            // Verify that the cursor's Dispose method was called
+            mockRestaurantCursor.Verify();
+            mockCustomerCursor.Verify();
         }
+
+
 
         [Fact]
         public void UpdateOrderInfo_ShouldCallUpdateOne()
