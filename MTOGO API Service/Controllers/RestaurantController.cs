@@ -59,14 +59,56 @@ namespace MTOGO_Api_Service.Controllers
             }
         }
 
-        [HttpDelete("{restaurantId}")]
-        public IActionResult DeleteRestaurant(string restaurantId)
+        [HttpPost("{restaurantId}/menu/{menuId}/menuitem")]
+        public IActionResult AddMenuItemToMenu(string restaurantId, ObjectId menuId, [FromBody] MenuItem menuItem)
         {
             try
             {
+                // Valider restaurantId format
+                if (!ObjectId.TryParse(restaurantId, out var restaurantObjectId))
+                {
+                    return BadRequest("Invalid restaurant ID format.");
+                }
+
+                // Ingen grund til at validere menuId som ObjectId, da det bruges som string i DBManager
+
+                // Kald DBManager-metoden
+                _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuId, menuItem);
+
+                return Ok("Menu item added successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{restaurantId}")]
+        public IActionResult DeleteRestaurant(string restaurantId)
+        {
+            //try
+            //{
+            //    // Valider orderId for at sikre, at det er et gyldigt ObjectId-format
+            //    if (!ObjectId.TryParse(orderId, out _))
+            //    {
+            //        return BadRequest("Invalid OrderId format.");
+            //    }
+
+            //    // Kald DbManager for at slette ordren
+            //    _dbManager.DeleteOrder(orderId);
+            //    return Ok("Order deleted successfully.");
+            //}
+            //catch (Exception ex)
+            //{
+            //    return BadRequest($"Error: {ex.Message}");
+            //}
+            try
+            {
                 var id = ObjectId.Parse(restaurantId);
+
                 _dbManager.DeleteRestaurant(id);
-                return Ok("Restaurant deleted successfully.");
+                return Ok("Order deleted successfully.");
+
             }
             catch (Exception ex)
             {

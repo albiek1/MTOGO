@@ -5,6 +5,7 @@ using MTOGO_API_Service.Data;
 public class Order
 {
     [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
     public ObjectId OrderId { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)]
@@ -18,3 +19,13 @@ public class Order
     public string Status { get; set; }
     public string OrderComment { get; set; }
 }
+
+//public class OrderItemDetail
+//{
+//    [BsonRepresentation(BsonType.ObjectId)]
+//    public string MenuItemId { get; set; }
+
+//    public string Name { get; set; }
+//    public double Price { get; set; }
+//    public string Description { get; set; }
+//}

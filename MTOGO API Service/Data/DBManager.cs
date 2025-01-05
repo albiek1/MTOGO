@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Runtime.CompilerServices;
 
 namespace MTOGO_API_Service.Data
 {
-    public class DBManager
+    public class DBManager : IDBManager
     {
         private const string connectionURI = "mongodb://localhost:27017";
         private readonly IMongoClient _client;
@@ -16,6 +17,7 @@ namespace MTOGO_API_Service.Data
         private readonly IMongoCollection<Restaurant> _restaurantColl;
 
         private List<Menu> _menuList = new List<Menu>();
+        private IMongoClient @object;
 
         public DBManager()
         {
@@ -26,6 +28,15 @@ namespace MTOGO_API_Service.Data
             _courierColl = _database.GetCollection<Courier>("Couriers");
             _orderColl = _database.GetCollection<Order>("Orders");
             _restaurantColl = _database.GetCollection<Restaurant>("Restaurants");
+        }
+
+        public DBManager(IMongoClient client)
+        {
+            var database = client.GetDatabase("SoftwareDevelopmentExam");
+
+            _restaurantColl = database.GetCollection<Restaurant>("Restaurants");
+            _customerColl = database.GetCollection<Customer>("Customers");
+            _orderColl = database.GetCollection<Order>("Orders");  // Mocked collection hentes fra databasen
         }
 
         //ADD Metoder
@@ -115,13 +126,52 @@ namespace MTOGO_API_Service.Data
                 throw new Exception($"Restaurant with ID {restaurantObjectId} not found.");
             }
 
-            // Opret ny ordre
+            // Opret ny ordre uden menuitems
             order.OrderId = ObjectId.GenerateNewId();
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
+            order.Items = new List<MenuItem>(); // Intet menuItem endnu
 
+            // Indsæt ordren i databasen
             _orderColl.InsertOne(order);
         }
+
+        public void AddMenuItemsToOrder(ObjectId orderId, List<MenuItem> menuItems)
+{
+    // Find ordren i databasen
+    var order = _orderColl.Find(o => o.OrderId == orderId).FirstOrDefault();
+    if (order == null)
+    {
+        throw new Exception("Order not found.");
+    }
+
+    // Validér og tilføj de nye menuItems til ordren
+    foreach (var menuItem in menuItems)
+    {
+        if (menuItem.MenuItemId == ObjectId.Empty)
+        {
+            throw new Exception($"Invalid MenuItemId for item {menuItem.MenuItemName}");
+        }
+
+        // Kontroller om menu-item allerede findes i ordren
+        if (order.Items.Any(i => i.MenuItemId == menuItem.MenuItemId))
+        {
+            throw new Exception($"MenuItem with ID {menuItem.MenuItemId} is already in the order.");
+        }
+
+        // Tilføj menu-item til ordre
+        order.Items.Add(menuItem);
+    }
+
+    // Opdater ordren i databasen
+    var updateResult = _orderColl.ReplaceOne(o => o.OrderId == orderId, order);
+
+    // Kontrollér, om opdateringen lykkedes
+    if (updateResult.ModifiedCount == 0)
+    {
+        throw new Exception("Failed to update the order. Please try again.");
+    }
+}
 
         //Method for adding a new Customer
         public void AddCustomer(Customer customer)
@@ -139,6 +189,30 @@ namespace MTOGO_API_Service.Data
                 throw new InvalidDataException("A courier with that email already exists");
             }
             _courierColl.InsertOne(courier);
+        }
+
+        public void AddDeliveriesToCourier(ObjectId courierId, List<ObjectId> deliveryIds)
+        {
+            var courier = _courierColl.Find(c => c.CourierId == courierId).FirstOrDefault();
+            if (courier == null)
+            {
+                throw new Exception($"Courier with ID {courierId} not found.");
+            }
+
+            if (courier.AssignedDeliveries == null)
+            {
+                courier.AssignedDeliveries = new List<ObjectId>();
+            }
+
+            foreach (var deliveryId in deliveryIds)
+            {
+                if (!courier.AssignedDeliveries.Contains(deliveryId))
+                {
+                    courier.AssignedDeliveries.Add(deliveryId);
+                }
+            }
+
+            _courierColl.ReplaceOne(c => c.CourierId == courierId, courier);
         }
 
         //GET Metoder
@@ -178,23 +252,24 @@ namespace MTOGO_API_Service.Data
         }
 
         //Method for checking if Email of Courier is Unique
-        public  bool IsCourierUnique(Courier courier)
+        public bool IsCourierUnique(Courier courier)
         {
             bool isUnique = false;
             Courier result = _courierColl.Find<Courier>(ele => ele.Email == courier.Email).FirstOrDefault();
-            if (result == null) {
-            isUnique = true;
+            if (result == null)
+            {
+                isUnique = true;
             }
             return isUnique;
         }
 
         //Method for searching up a courier by their Email address
-        public Courier GetCourierByEmail(string email) 
+        public Courier GetCourierByEmail(string email)
         {
             Courier courier = _courierColl.Find<Courier>(ele => ele.Email == email).FirstOrDefault();
             if (courier == null)
             {
-            throw new InvalidDataException("No customer found with that email");
+                throw new InvalidDataException("No customer found with that email");
             }
             return courier;
         }

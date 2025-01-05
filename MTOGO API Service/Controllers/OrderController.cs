@@ -25,6 +25,45 @@ namespace MTOGO_Api_Service.Controllers
             }
         }
 
+        [HttpPost("add-items/{orderId}")]
+        public IActionResult AddMenuItemsToOrder(string orderId, [FromBody] List<MenuItem> menuItems)
+        {
+            try
+            {
+                // Valider og konverter orderId fra string til ObjectId
+                if (!ObjectId.TryParse(orderId, out var orderObjectId))
+                {
+                    return BadRequest("Invalid orderId format.");
+                }
+
+                // Valider og konverter MenuItemId i hvert menuItem
+                foreach (var menuItem in menuItems)
+                {
+                    // Valider og konverter MenuItemId (hvis det er en string, konverter til ObjectId)
+                    if (menuItem.MenuItemId.ToString() is string menuItemIdString)
+                    {
+                        // Forsøg at konvertere MenuItemId fra string til ObjectId
+                        if (!ObjectId.TryParse(menuItemIdString, out var menuItemObjectId))
+                        {
+                            return BadRequest($"Invalid MenuItemId format for item {menuItem.MenuItemName}");
+                        }
+                        // Opdater menuItemId med den konverterede ObjectId
+                        menuItem.MenuItemId = menuItemObjectId;
+                    }
+                }
+
+                // Kald DBManager-metoden for at opdatere ordren
+                _dbManager.AddMenuItemsToOrder(orderObjectId, menuItems);
+
+                return Ok("Menu items added to order successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
+
+
         [HttpGet("{orderId}")]
         public ActionResult<Order> GetOrderById(string orderId)
         {

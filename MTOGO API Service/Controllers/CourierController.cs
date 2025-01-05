@@ -96,5 +96,23 @@ namespace MTOGO_Api_Service.Controllers
                 return BadRequest($"Error: {ex.Message}");
             }
         }
+
+        [HttpPost("{courierId}/assign-deliveries")]
+        public IActionResult AssignDeliveriesToCourier(string courierId, [FromBody] List<string> deliveryIds)
+        {
+            try
+            {
+                var courierObjectId = ObjectId.Parse(courierId);
+                var deliveryObjectIds = deliveryIds.Select(id => ObjectId.Parse(id)).ToList();
+
+                _dbManager.AddDeliveriesToCourier(courierObjectId, deliveryObjectIds);
+
+                return Ok("Deliveries have been assigned to the courier");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error: {ex.Message}");
+            }
+        }
     }
 }
