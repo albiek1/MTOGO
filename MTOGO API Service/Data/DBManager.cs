@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Runtime.CompilerServices;
 
 namespace MTOGO_API_Service.Data
 {
-    public class DBManager
+    public class DBManager : IDBManager
     {
         private const string connectionURI = "mongodb://localhost:27017";
         private readonly IMongoClient _client;
@@ -16,6 +17,7 @@ namespace MTOGO_API_Service.Data
         private readonly IMongoCollection<Restaurant> _restaurantColl;
 
         private List<Menu> _menuList = new List<Menu>();
+        private IMongoClient @object;
 
         public DBManager()
         {
@@ -26,6 +28,15 @@ namespace MTOGO_API_Service.Data
             _courierColl = _database.GetCollection<Courier>("Couriers");
             _orderColl = _database.GetCollection<Order>("Orders");
             _restaurantColl = _database.GetCollection<Restaurant>("Restaurants");
+        }
+
+        public DBManager(IMongoClient client)
+        {
+            var database = client.GetDatabase("SoftwareDevelopmentExam");
+
+            _restaurantColl = database.GetCollection<Restaurant>("Restaurants");
+            _customerColl = database.GetCollection<Customer>("Customers");
+            _orderColl = database.GetCollection<Order>("Orders");  // Mocked collection hentes fra databasen
         }
 
         //ADD Metoder
