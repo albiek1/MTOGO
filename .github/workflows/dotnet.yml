@@ -16,9 +16,12 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Install required workloads
+      run: |
+        dotnet workload install aspire  # Installerer den nødvendige workload
     - name: Restore dependencies
-      run: dotnet restore MTOGO.Tests/MTOGO.Tests.csproj  # Restore dependencies for the test project
+      run: dotnet restore MTOGO.Tests/MTOGO.Tests.csproj
     - name: Build
-      run: dotnet build MTOGO.Tests/MTOGO.Tests.csproj --no-restore  # Build the test project
+      run: dotnet build MTOGO.Tests/MTOGO.Tests.csproj --no-restore
     - name: Test
-      run: dotnet test MTOGO.Tests/MTOGO.Tests.csproj --no-build --verbosity normal  # Run the tests in the test project
+      run: dotnet test MTOGO.Tests/MTOGO.Tests.csproj --no-build --verbosity normal
