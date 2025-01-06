@@ -10,8 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +20,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore MTOGO.sln  # Brug løsningen i stedet for en specifik .csproj-fil
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build MTOGO.sln --no-restore  # Brug løsningen til at bygge alle projekterne
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test MTOGO.sln --no-build --verbosity normal  # Brug løsningen til at køre alle tests
