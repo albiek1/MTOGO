@@ -36,7 +36,7 @@ namespace MTOGO_API_Service.Data
 
             _restaurantColl = database.GetCollection<Restaurant>("Restaurants");
             _customerColl = database.GetCollection<Customer>("Customers");
-            _orderColl = database.GetCollection<Order>("Orders");  // Mocked collection hentes fra databasen
+            _orderColl = database.GetCollection<Order>("Orders");
         }
 
         //ADD Metoder
@@ -131,6 +131,8 @@ namespace MTOGO_API_Service.Data
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
             order.Items = new List<MenuItem>(); // Intet menuItem endnu
+
+            Console.WriteLine($"Adding order {order.OrderId} added to the database");
 
             // Indsæt ordren i databasen
             _orderColl.InsertOne(order);
