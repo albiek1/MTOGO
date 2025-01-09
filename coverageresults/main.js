@@ -221,18 +221,13 @@ var assemblies = [
   {
     "name": "MTOGO API Service",
     "classes": [
-      { "name": "MTOGO_Api_Service.Controllers.CourierController", "rp": "MTOGO_API_Service_CourierController.html", "cl": 0, "ucl": 60, "cal": 60, "tl": 118, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_Api_Service.Controllers.CustomerController", "rp": "MTOGO_API_Service_CustomerController.html", "cl": 0, "ucl": 39, "cal": 39, "tl": 77, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_Api_Service.Controllers.OrderController", "rp": "MTOGO_API_Service_OrderController.html", "cl": 0, "ucl": 60, "cal": 60, "tl": 119, "cb": 0, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_Api_Service.Controllers.RestaurantController", "rp": "MTOGO_API_Service_RestaurantController.html", "cl": 0, "ucl": 59, "cal": 59, "tl": 137, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.Courier", "rp": "MTOGO_API_Service_Courier.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_Api_Service.Controllers.CustomerController", "rp": "MTOGO_API_Service_CustomerController.html", "cl": 33, "ucl": 9, "cal": 42, "tl": 82, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_Api_Service.Controllers.OrderController", "rp": "MTOGO_API_Service_OrderController.html", "cl": 46, "ucl": 17, "cal": 63, "tl": 124, "cb": 7, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_Api_Service.Controllers.RestaurantController", "rp": "MTOGO_API_Service_RestaurantController.html", "cl": 45, "ucl": 27, "cal": 72, "tl": 144, "cb": 9, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MTOGO_API_Service.Data.Customer", "rp": "MTOGO_API_Service_Customer.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 15, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.DBManager", "rp": "MTOGO_API_Service_DBManager.html", "cl": 43, "ucl": 167, "cal": 210, "tl": 372, "cb": 6, "tb": 44, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.Delivery", "rp": "MTOGO_API_Service_Delivery.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 15, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.Feedback", "rp": "MTOGO_API_Service_Feedback.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 13, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.Invoice", "rp": "MTOGO_API_Service_Invoice.html", "cl": 0, "ucl": 6, "cal": 6, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.Menu", "rp": "MTOGO_API_Service_Menu.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MTOGO_API_Service.Data.MenuItem", "rp": "MTOGO_API_Service_MenuItem.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_API_Service.Data.DBManager", "rp": "MTOGO_API_Service_DBManager.html", "cl": 72, "ucl": 141, "cal": 213, "tl": 377, "cb": 15, "tb": 48, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_API_Service.Data.Menu", "rp": "MTOGO_API_Service_Menu.html", "cl": 2, "ucl": 2, "cal": 4, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MTOGO_API_Service.Data.MenuItem", "rp": "MTOGO_API_Service_MenuItem.html", "cl": 3, "ucl": 1, "cal": 4, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MTOGO_API_Service.Data.Order", "rp": "MTOGO_API_Service_Order.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 34, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MTOGO_API_Service.Data.Restaurant", "rp": "MTOGO_API_Service_Restaurant.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Program", "rp": "MTOGO_API_Service_Program.html", "cl": 0, "ucl": 14, "cal": 14, "tl": 28, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -255,28 +250,22 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddMenuItemsToOrder(MongoDB.Bson.ObjectId,System.Collections.Generic.List`1<MTOGO_API_Service.Data.MenuItem>)", "methodShortName": "AddMenuItemsToOrder(...)", "fileIndex": 0, "line": 142,
+    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddMenuItemToRestaurantMenu(System.String,MongoDB.Bson.ObjectId,MTOGO_API_Service.Data.MenuItem)", "methodShortName": "AddMenuItemToRestaurantMenu(...)", "fileIndex": 0, "line": 73,
     "metrics": [
-      { "value": 110, "exceeded": true },
+      { "value": 72, "exceeded": true },
+      { "value": 8, "exceeded": false },
+    ]},
+  {
+    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddDeliveriesToCourier(MongoDB.Bson.ObjectId,System.Collections.Generic.List`1<MongoDB.Bson.ObjectId>)", "methodShortName": "AddDeliveriesToCourier(...)", "fileIndex": 0, "line": 202,
+    "metrics": [
+      { "value": 72, "exceeded": true },
+      { "value": 8, "exceeded": false },
+    ]},
+  {
+    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddMenuItemsToOrder(MongoDB.Bson.ObjectId,System.Collections.Generic.List`1<MTOGO_API_Service.Data.MenuItem>)", "methodShortName": "AddMenuItemsToOrder(...)", "fileIndex": 0, "line": 147,
+    "metrics": [
+      { "value": 37, "exceeded": true },
       { "value": 10, "exceeded": false },
-    ]},
-  {
-    "assembly": "MTOGO API Service", "class": "MTOGO_Api_Service.Controllers.OrderController", "reportPath": "MTOGO_API_Service_OrderController.html", "methodName": "AddMenuItemsToOrder(System.String,System.Collections.Generic.List`1<MTOGO_API_Service.Data.MenuItem>)", "methodShortName": "AddMenuItemsToOrder(...)", "fileIndex": 0, "line": 30,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
-    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddMenuItemToRestaurantMenu(System.String,MongoDB.Bson.ObjectId,MTOGO_API_Service.Data.MenuItem)", "methodShortName": "AddMenuItemToRestaurantMenu(...)", "fileIndex": 0, "line": 69,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
-    "assembly": "MTOGO API Service", "class": "MTOGO_API_Service.Data.DBManager", "reportPath": "MTOGO_API_Service_DBManager.html", "methodName": "AddDeliveriesToCourier(MongoDB.Bson.ObjectId,System.Collections.Generic.List`1<MongoDB.Bson.ObjectId>)", "methodShortName": "AddDeliveriesToCourier(...)", "fileIndex": 0, "line": 197,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
     ]},
 ];
 

@@ -9,7 +9,12 @@ namespace MTOGO_Api_Service.Controllers
     [Route("api/[controller]")]
     public class CustomerController : Controller
     {
-        DBManager _dbManager = new DBManager();
+        private readonly IDBManager _dbManager;
+
+        public CustomerController(IDBManager dbManager)
+        {
+            _dbManager = dbManager;
+        }
 
         [HttpPost("add")]
         public ActionResult<Customer> AddNewCustomer([FromBody] Customer customer)

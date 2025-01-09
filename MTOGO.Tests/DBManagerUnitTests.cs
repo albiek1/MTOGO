@@ -1,5 +1,6 @@
 ﻿using IdentityModel.Internal;
 using Microsoft.AspNetCore.Mvc;
+using Mongo2Go;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Moq;
@@ -43,7 +44,7 @@ namespace MTOGO.Tests
             _dbManager = new DBManager(_mockClient.Object);
         }
 
-        //RESTAURANT TESTS
+        //RESTAURANT, Menu og MenuItem TESTS
         [Fact]
         public void AddRestaurantTest()
         {
@@ -93,6 +94,16 @@ namespace MTOGO.Tests
             var okResult = Assert.IsType<OkObjectResult>(actionResult.Result); // Validate that Result is OkObjectResult
             Assert.Equal(restaurant, okResult.Value); // Validate the returned value
             mockDbManager.Verify(db => db.AddRestaurant(It.IsAny<Restaurant>()), Times.Once);
+        }
+
+        [Fact]
+        public void AddRestaurant_InvalidInput_ThrowsException()
+        {
+            // Arrange
+            var invalidRestaurant = new Restaurant { Name = null, Address = null };
+
+            // Act & Assert
+            Assert.Throws<Exception>(() => _dbManager.AddRestaurant(invalidRestaurant));
         }
 
         [Fact]
@@ -169,38 +180,174 @@ namespace MTOGO.Tests
         }
 
         [Fact]
-        public void AddCustomerTest()
+        public void GetAllRestaurants_ReturnsListOfRestaurants()
         {
-            // Arrange: Mock IMongoCollection<Customer>
-            var mockCustomerCollection = new Mock<IMongoCollection<Customer>>();
-            var mockDatabase = new Mock<IMongoDatabase>();
-            mockDatabase.Setup(db => db.GetCollection<Customer>("Customers", null))
-                        .Returns(mockCustomerCollection.Object);
+            // Arrange
+            var mockCursor = new Mock<IAsyncCursor<Restaurant>>();
+            var restaurants = new List<Restaurant>
+                {
+                    new Restaurant { Name = "Restaurant 1" },
+                    new Restaurant { Name = "Restaurant 2" }
+                };
+            mockCursor.SetupSequence(c => c.MoveNext(It.IsAny<CancellationToken>())).Returns(true).Returns(false);
+            mockCursor.Setup(c => c.Current).Returns(restaurants);
 
+            _mockRestaurantCollection.Setup(coll => coll.FindSync(It.IsAny<FilterDefinition<Restaurant>>(),
+                                                                   It.IsAny<FindOptions<Restaurant>>(),
+                                                                   It.IsAny<CancellationToken>()))
+                                     .Returns(mockCursor.Object);
+
+            // Act
+            var result = _dbManager.GetAllRestaurants();
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Contains(result, r => r.Name == "Restaurant 1");
+            Assert.Contains(result, r => r.Name == "Restaurant 2");
+        }
+
+        
+
+        
+
+        [Fact]
+        public void DeleteRestaurantTest()
+        {
+            // Arrange: Mock IMongoCollection<Restaurant>
+            var mockRestaurantCollection = new Mock<IMongoCollection<Restaurant>>();
+
+            // Mock IMongoDatabase
+            var mockDatabase = new Mock<IMongoDatabase>();
+            mockDatabase.Setup(db => db.GetCollection<Restaurant>("Restaurants", null))
+                        .Returns(mockRestaurantCollection.Object);
+
+            // Mock IMongoClient
             var mockClient = new Mock<IMongoClient>();
             mockClient.Setup(client => client.GetDatabase("SoftwareDevelopmentExam", null))
                       .Returns(mockDatabase.Object);
 
+            // Opret DBManager med mocket client
             var dbManager = new DBManager(mockClient.Object);
 
-            var customer = new Customer
-            {
-                CustomerId = ObjectId.GenerateNewId(),
-                Name = "John Doe",
-                Email = "john.doe@example.com",
-                PhoneNumber = "12345678",
-                UserName = "johnny123",
-                Password = "password123"
-            };
+            // Simuler restaurant ID
+            var restaurantId = ObjectId.GenerateNewId();
 
-            // Act: Kald AddCustomer
-            dbManager.AddCustomer(customer);
+            // Act: Kald DeleteRestaurant
+            dbManager.DeleteRestaurant(restaurantId);
 
-            // Assert: Verificer at InsertOne blev kaldt én gang
-            mockCustomerCollection.Verify(
-                coll => coll.InsertOne(It.IsAny<Customer>(), It.IsAny<InsertOneOptions>(), It.IsAny<CancellationToken>()),
+            // Assert: Verificer, at DeleteOne blev kaldt præcist én gang
+            mockRestaurantCollection.Verify(
+                coll => coll.DeleteOne(It.IsAny<FilterDefinition<Restaurant>>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
+
+        //MenuItems tests
+        //[Fact]
+        //public void AddMenuItemToRestaurantMenu_ValidInputs_MenuItemAddedSuccessfully()
+        //{
+        //    // Arrange
+        //    var restaurantId = ObjectId.GenerateNewId().ToString();
+        //    var menuId = ObjectId.GenerateNewId();
+        //    var newMenuItem = new MenuItem
+        //    {
+        //        MenuItemName = "Test Item",
+        //        Price = 100
+        //    };
+
+        //    var restaurant = new Restaurant
+        //    {
+        //        RestaurantId = ObjectId.Parse(restaurantId),
+        //        Menu = new Menu
+        //        {
+        //            MenuId = menuId,
+        //            MenuItems = new List<MenuItem>()
+        //        }
+        //    };
+
+        //    // Set up mocks
+        //    _mockRestaurantCollection
+        //        .Setup(c => c.Find(It.IsAny<FilterDefinition<Restaurant>>(), null))
+        //        .Returns(Mock.Of<IFindFluent<Restaurant, Restaurant>>(find =>
+        //            find.FirstOrDefault(It.IsAny<CancellationToken>()) == restaurant));
+
+        //    _mockRestaurantCollection
+        //        .Setup(c => c.ReplaceOne(
+        //            It.IsAny<FilterDefinition<Restaurant>>(),  // Filter
+        //            It.IsAny<Restaurant>(),                    // Restaurant object
+        //            It.IsAny<ReplaceOptions>(),               // Replace options (kan være null)
+        //            It.IsAny<CancellationToken>()             // Cancellation token (kan være default)
+        //        ))
+        //        .Returns(new ReplaceOneResult.Acknowledged(1, 1, null));  // Return a mocked ReplaceOneResult
+
+        //    // Act
+        //    _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuId, newMenuItem);
+
+        //    // Assert
+        //    Assert.Single(restaurant.Menu.MenuItems);
+        //    Assert.Equal("Test Item", restaurant.Menu.MenuItems[0].MenuItemName);
+        //    Assert.Equal(100, restaurant.Menu.MenuItems[0].Price);
+
+        //    // Verify that ReplaceOne was called
+        //    _mockRestaurantCollection.Verify(
+        //        c => c.ReplaceOne(
+        //            It.IsAny<FilterDefinition<Restaurant>>(),  // Match filteret
+        //            restaurant,                                // Restaurant objekt
+        //            It.IsAny<ReplaceOptions>(),               // Brug It.IsAny<ReplaceOptions>() i stedet for null
+        //            It.IsAny<CancellationToken>()             // Brug It.IsAny<CancellationToken>() i stedet for default
+        //        ),
+        //        Times.Once
+        //    );
+        //}
+
+        //[Fact]
+        //public void AddMenuItemToRestaurantMenu_InvalidRestaurantId_ThrowsException()
+        //{
+        //    // Arrange
+        //    var invalidRestaurantId = "invalid-id";
+        //    var menuId = ObjectId.GenerateNewId();
+        //    var newMenuItem = new MenuItem
+        //    {
+        //        MenuItemName = "Test Item",
+        //        Price = 100
+        //    };
+
+        //    // Act & Assert
+        //    var ex = Assert.Throws<FormatException>(() =>
+        //        _dbManager.AddMenuItemToRestaurantMenu(invalidRestaurantId, menuId, newMenuItem));
+
+        //    Assert.Equal("An error occurred while parsing restaurantId.", ex.Message);
+        //}
+
+        //[Fact]
+        //public void AddMenuItemToRestaurantMenu_MenuNotFound_ThrowsException()
+        //{
+        //    // Arrange
+        //    var restaurantId = ObjectId.GenerateNewId().ToString();
+        //    var menuId = ObjectId.GenerateNewId();
+        //    var newMenuItem = new MenuItem
+        //    {
+        //        MenuItemName = "Test Item",
+        //        Price = 100
+        //    };
+
+        //    var restaurant = new Restaurant
+        //    {
+        //        RestaurantId = ObjectId.Parse(restaurantId),
+        //        Menu = null // No menu present
+        //    };
+
+        //    _mockRestaurantCollection
+        //        .Setup(c => c.Find(It.IsAny<FilterDefinition<Restaurant>>(), null))
+        //        .Returns(Mock.Of<IFindFluent<Restaurant, Restaurant>>(find =>
+        //            find.FirstOrDefault(It.IsAny<CancellationToken>()) == restaurant));
+
+        //    // Act & Assert
+        //    var ex = Assert.Throws<Exception>(() =>
+        //        _dbManager.AddMenuItemToRestaurantMenu(restaurantId, menuId, newMenuItem));
+
+        //    Assert.Equal($"Menu not found for Restaurant ID {restaurantId}.", ex.Message);
+        //}
+
 
         //ORDER TESTS
         [Fact]
@@ -253,34 +400,53 @@ namespace MTOGO.Tests
         }
 
         [Fact]
-        public void DeleteRestaurantTest()
+        public void DeleteOrder_OrderNotFound_DoesNotThrow()
         {
-            // Arrange: Mock IMongoCollection<Restaurant>
-            var mockRestaurantCollection = new Mock<IMongoCollection<Restaurant>>();
+            // Arrange
+            var nonExistingOrderId = ObjectId.GenerateNewId();
+            _mockOrderCollection.Setup(coll => coll.DeleteOne(It.IsAny<FilterDefinition<Order>>(),
+                                                              It.IsAny<CancellationToken>()))
+                                .Returns((DeleteResult)null);
 
-            // Mock IMongoDatabase
+            // Act & Assert
+            var exception = Record.Exception(() => _dbManager.DeleteOrder(nonExistingOrderId));
+            Assert.Null(exception);
+        }
+
+        //Customer Tests
+        [Fact]
+        public void AddCustomerTest()
+        {
+            // Arrange: Mock IMongoCollection<Customer>
+            var mockCustomerCollection = new Mock<IMongoCollection<Customer>>();
             var mockDatabase = new Mock<IMongoDatabase>();
-            mockDatabase.Setup(db => db.GetCollection<Restaurant>("Restaurants", null))
-                        .Returns(mockRestaurantCollection.Object);
+            mockDatabase.Setup(db => db.GetCollection<Customer>("Customers", null))
+                        .Returns(mockCustomerCollection.Object);
 
-            // Mock IMongoClient
             var mockClient = new Mock<IMongoClient>();
             mockClient.Setup(client => client.GetDatabase("SoftwareDevelopmentExam", null))
                       .Returns(mockDatabase.Object);
 
-            // Opret DBManager med mocket client
             var dbManager = new DBManager(mockClient.Object);
 
-            // Simuler restaurant ID
-            var restaurantId = ObjectId.GenerateNewId();
+            var customer = new Customer
+            {
+                CustomerId = ObjectId.GenerateNewId(),
+                Name = "John Doe",
+                Email = "john.doe@example.com",
+                PhoneNumber = "12345678",
+                UserName = "johnny123",
+                Password = "password123"
+            };
 
-            // Act: Kald DeleteRestaurant
-            dbManager.DeleteRestaurant(restaurantId);
+            // Act: Kald AddCustomer
+            dbManager.AddCustomer(customer);
 
-            // Assert: Verificer, at DeleteOne blev kaldt præcist én gang
-            mockRestaurantCollection.Verify(
-                coll => coll.DeleteOne(It.IsAny<FilterDefinition<Restaurant>>(), It.IsAny<CancellationToken>()),
+            // Assert: Verificer at InsertOne blev kaldt én gang
+            mockCustomerCollection.Verify(
+                coll => coll.InsertOne(It.IsAny<Customer>(), It.IsAny<InsertOneOptions>(), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
+
     }
 }

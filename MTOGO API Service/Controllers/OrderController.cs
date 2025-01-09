@@ -9,7 +9,12 @@ namespace MTOGO_Api_Service.Controllers
     [Route("api/[controller]")]
     public class OrderController : Controller
     {
-        DBManager _dbManager = new DBManager();
+        private readonly IDBManager _dbManager;
+
+        public OrderController(IDBManager dbManager)
+        {
+            _dbManager = dbManager;
+        }
 
         [HttpPost("add")]
         public IActionResult AddOrder([FromBody] Order order)
