@@ -20,7 +20,6 @@
 //        [Fact]
 //        public void CustomerCanPlaceOrder()
 //        {
-//            // Arrange: Naviger til systemets ordreside
 //            driver.Navigate().GoToUrl("http://localhost:5000");
 
 //            // Act: Vælg restaurant og menuvarer
@@ -32,7 +31,7 @@
 //            var menuItemCheckbox = driver.FindElement(By.Id("menu-item-1"));
 //            menuItemCheckbox.Click();
 
-//            // Indtast leveringsoplysninger og placer ordren
+//            // Indtast oplysninger vedr. levering og klik
 //            driver.FindElement(By.Id("delivery-address")).SendKeys("Test Address");
 //            driver.FindElement(By.Id("place-order-button")).Click();
 

@@ -11,19 +11,17 @@ namespace MTOGO.Tests
 
         public IntegrationTests()
         {
-            // Start Mongo2Go
             _mongoDbRunner = MongoDbRunner.Start();
         }
 
         [Fact]
-        public void AddOrder_ShouldInsertOrderIntoDatabase()
+        public void AddOrderToDatabase()
         {
             // Arrange: Opret MongoDB-klient og database
             var client = new MongoClient(_mongoDbRunner.ConnectionString);
             var database = client.GetDatabase("TestDatabase");
 
-            // Opret DBManager med den database, vi har startet i Mongo2Go
-            var dbManager = new DBManager(client); // Din eksisterende DBManager klasse
+            var dbManager = new DBManager(client);
 
             // Opret en restaurant og en kunde
             var restaurant = new Restaurant
@@ -50,23 +48,23 @@ namespace MTOGO.Tests
             var order = new Order
             {
                 OrderId = ObjectId.GenerateNewId(),
-                CustomerId = customer.CustomerId.ToString(),  // Vi holder det som string i Order
-                RestaurantId = restaurant.RestaurantId.ToString(),  // Vi holder det som string i Order
+                CustomerId = customer.CustomerId,
+                RestaurantId = restaurant.RestaurantId,
                 OrderDate = DateTime.UtcNow,
                 Status = "Pending",
                 OrderComment = "Test order.",
                 Items = new List<MenuItem>()
             };
 
-            // Konverter CustomerId og RestaurantId til ObjectId før gemming i databasen
-            ObjectId customerObjectId = ObjectId.Parse(order.CustomerId);
-            ObjectId restaurantObjectId = ObjectId.Parse(order.RestaurantId);
-
-            // Kald AddOrder og indsæt ordren i databasen
             dbManager.AddOrder(order);
 
-            Assert.Equal(order.CustomerId, customer.CustomerId.ToString());
-            Assert.Equal(order.RestaurantId, restaurant.RestaurantId.ToString());
+            // Forsøg at hente ordren synkront
+            var retrievedOrder = dbManager.GetOrderById(order.OrderId);
+
+            Assert.NotNull(retrievedOrder);
+            Assert.Equal(order.OrderId, retrievedOrder.OrderId);
+            Assert.Equal(order.CustomerId, retrievedOrder.CustomerId);
+            Assert.Equal(order.RestaurantId, retrievedOrder.RestaurantId);
         }
 
 

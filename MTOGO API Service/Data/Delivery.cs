@@ -1,8 +1,10 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MTOGO_API_Service.Data
 {
+    [ExcludeFromCodeCoverage]
     public class Delivery
     {
         [BsonId]

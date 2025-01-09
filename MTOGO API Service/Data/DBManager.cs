@@ -126,11 +126,12 @@ namespace MTOGO_API_Service.Data
                 throw new Exception($"Restaurant with ID {restaurantObjectId} not found.");
             }
 
+
             // Opret ny ordre uden menuitems
             order.OrderId = ObjectId.GenerateNewId();
             order.OrderDate = DateTime.UtcNow;
             order.Status = "Pending";
-            order.Items = new List<MenuItem>(); // Intet menuItem endnu
+            order.Items = null;
 
             Console.WriteLine($"Adding order {order.OrderId} added to the database");
 
