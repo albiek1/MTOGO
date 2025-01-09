@@ -7,13 +7,23 @@ namespace MTOGO_Api_Service.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RestaurantController : Controller
+    public class RestaurantController : ControllerBase
     {
-        DBManager _dbManager = new DBManager();
+        private readonly IDBManager _dbManager;
+
+        public RestaurantController(IDBManager dbManager)
+        {
+            _dbManager = dbManager;
+        }
 
         [HttpPost("add")]
         public ActionResult<Restaurant> AddRestaurant([FromBody] Restaurant restaurant)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 _dbManager.AddRestaurant(restaurant);
@@ -28,9 +38,13 @@ namespace MTOGO_Api_Service.Controllers
         [HttpGet("{restaurantId}")]
         public ActionResult<Restaurant> GetRestaurantById(string restaurantId)
         {
+            if (!ObjectId.TryParse(restaurantId, out var id))
+            {
+                return BadRequest("Invalid restaurant ID format.");
+            }
+
             try
             {
-                var id = ObjectId.Parse(restaurantId);
                 var restaurant = _dbManager.GetRestaurantById(id);
                 if (restaurant == null)
                 {
@@ -47,14 +61,22 @@ namespace MTOGO_Api_Service.Controllers
         [HttpPost("{restaurantId}/menu/add")]
         public ActionResult AddMenuToRestaurant(string restaurantId, [FromBody] Menu menu)
         {
+            if (!ObjectId.TryParse(restaurantId, out var id))
+            {
+                return BadRequest("Invalid restaurant ID format.");
+            }
+
             try
             {
-                var id = ObjectId.Parse(restaurantId);
                 _dbManager.AddMenuToRestaurant(id, menu);
                 return Ok("Menu added to restaurant successfully.");
             }
             catch (Exception ex)
             {
+                if (ex.Message.Contains("Restaurant not found"))
+                {
+                    return NotFound("Restaurant not found.");
+                }
                 return BadRequest($"Error: {ex.Message}");
             }
         }
@@ -86,22 +108,6 @@ namespace MTOGO_Api_Service.Controllers
         [HttpDelete("{restaurantId}")]
         public IActionResult DeleteRestaurant(string restaurantId)
         {
-            //try
-            //{
-            //    // Valider orderId for at sikre, at det er et gyldigt ObjectId-format
-            //    if (!ObjectId.TryParse(orderId, out _))
-            //    {
-            //        return BadRequest("Invalid OrderId format.");
-            //    }
-
-            //    // Kald DbManager for at slette ordren
-            //    _dbManager.DeleteOrder(orderId);
-            //    return Ok("Order deleted successfully.");
-            //}
-            //catch (Exception ex)
-            //{
-            //    return BadRequest($"Error: {ex.Message}");
-            //}
             try
             {
                 var id = ObjectId.Parse(restaurantId);
@@ -133,5 +139,6 @@ namespace MTOGO_Api_Service.Controllers
                 return BadRequest($"Error: {ex.Message}");
             }
         }
+
     }
 }

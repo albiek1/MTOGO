@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MTOGO_API_Service.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MTOGO_Api_Service.Controllers
 {
+    [ExcludeFromCodeCoverage]
     [ApiController]
     [Route("api/[controller]")]
     public class CourierController : Controller

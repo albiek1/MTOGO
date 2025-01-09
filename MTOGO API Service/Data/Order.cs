@@ -11,10 +11,10 @@ namespace MTOGO_API_Service.Data
         public ObjectId OrderId { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string CustomerId { get; set; }
+        public ObjectId CustomerId { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
-        public string RestaurantId { get; set; }
+        public ObjectId RestaurantId { get; set; }
 
         public List<MenuItem>? Items { get; set; }
         public DateTime OrderDate { get; set; }
