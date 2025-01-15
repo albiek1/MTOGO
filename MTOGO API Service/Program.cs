@@ -1,5 +1,5 @@
 using MTOGO_API_Service.Data;
-
+using System.Diagnostics.CodeAnalysis;
 
 var builder = WebApplication.CreateBuilder(args);
 
